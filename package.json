@@ -1,0 +1,76 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "reclaim2",
+  "title": "reclaim2",
+  "description": "",
+  "icon": "command-icon.png",
+  "author": "weber_grandizoli",
+  "owner": "reclaimai",
+  "categories": [
+    "Productivity",
+    "Applications"
+  ],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "quick-task",
+      "title": "Quick Task",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "create-habit",
+      "title": "Create Habit",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "create-smart-1-1",
+      "title": "Create Smart 1:1",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "create-scheduling-link",
+      "title": "Create Scheduling Link",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "create-calendar-sync",
+      "title": "Create Calendar Sync",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "open-stats",
+      "title": "Open Stats",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "ask-anything",
+      "title": "Ask Anything",
+      "description": "",
+      "mode": "view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.52.1"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "1.0.5",
+    "@types/node": "18.8.3",
+    "@types/react": "18.0.9",
+    "eslint": "^7.32.0",
+    "prettier": "^2.5.1",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}
