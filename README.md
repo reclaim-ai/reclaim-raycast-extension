@@ -1,1 +1,11 @@
-# reclaim2
+# Reclaim Raycast extension
+
+### Installation
+```
+yarn
+```
+
+### Running
+```
+yarn dev
+```

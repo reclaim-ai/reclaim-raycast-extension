@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "reclaim2",
-  "title": "reclaim2",
+  "name": "reclaim",
+  "title": "Reclaim",
   "description": "",
   "icon": "command-icon.png",
   "author": "weber_grandizoli",
@@ -11,55 +11,64 @@
     "Applications"
   ],
   "license": "MIT",
+  "preferences": [
+    {
+      "name": "apiToken",
+      "title": "Reclaim.ai API Token",
+      "description": "Your API token from reclaim.ai",
+      "type": "textfield",
+      "default": "",
+      "placeholder": "e.g. 1234567890-ABCDEFG-1234567890",
+      "required": true
+    }
+  ],
   "commands": [
+    {
+      "name": "notifications",
+      "title": "Reclaim Notifications",
+      "description": "Show unread notifications in the Menu Bar.",
+      "mode": "menu-bar",
+      "subtitle": "Reclaim",
+      "icon": "command-icon.png",
+      "interval": "5m"
+    },
     {
       "name": "quick-task",
       "title": "Quick Task",
       "description": "",
-      "mode": "view"
+      "mode": "view",
+      "arguments": [
+        {
+          "type": "text",
+          "name": "event",
+          "title": "event",
+          "placeholder": "Task",
+          "required": true
+        },
+        {
+          "type": "text",
+          "name": "time",
+          "title": "time",
+          "placeholder": "Time needed",
+          "required": true
+        }
+      ]
     },
     {
-      "name": "create-habit",
-      "title": "Create Habit",
-      "description": "",
-      "mode": "view"
-    },
-    {
-      "name": "create-smart-1-1",
-      "title": "Create Smart 1:1",
-      "description": "",
-      "mode": "view"
-    },
-    {
-      "name": "create-scheduling-link",
-      "title": "Create Scheduling Link",
-      "description": "",
-      "mode": "view"
-    },
-    {
-      "name": "create-calendar-sync",
-      "title": "Create Calendar Sync",
-      "description": "",
-      "mode": "view"
-    },
-    {
-      "name": "open-stats",
-      "title": "Open Stats",
-      "description": "",
-      "mode": "view"
-    },
-    {
-      "name": "ask-anything",
-      "title": "Ask Anything",
+      "name": "list-events",
+      "title": "My Calendar",
       "description": "",
       "mode": "view"
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.52.1"
+    "@raycast/api": "^1.52.1",
+    "axios": "^1.4.0",
+    "date-fns": "^2.30.0"
   },
   "devDependencies": {
     "@raycast/eslint-config": "1.0.5",
+    "@types/date-fns": "^2.6.0",
     "@types/node": "18.8.3",
     "@types/react": "18.0.9",
     "eslint": "^7.32.0",
