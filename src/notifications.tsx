@@ -15,17 +15,25 @@ export default function Command() {
     <MenuBarExtra
       icon={"command-icon.png"}
       // title="Upcoming in 15 min: Talk w/ Henry"
+      // icon={{
+      //   source: Icon.Dot,
+      //   tintColor: "#FF0000",
+      // }}
+      title="Ending in 30 min: Some event"
       tooltip="Reclaim.ai"
     >
       <MenuBarExtra.Section title="Ending in 30 min" />
-      <MenuBarExtra.Item
+      <MenuBarExtra.Submenu
         icon={{
           source: Icon.Dot,
           tintColor: "#FF0000",
         }}
         title="Some event"
-        onAction={handleOpenReclaim}
-      />
+        // onAction={handleOpenReclaim}
+      >
+        <MenuBarExtra.Item title="Join meeting" onAction={handleOpenReclaim} />
+        <MenuBarExtra.Item title="Open in Google Calendar" onAction={handleOpenReclaim} />
+      </MenuBarExtra.Submenu>
       <MenuBarExtra.Section title="Next" />
       <MenuBarExtra.Item
         icon={{

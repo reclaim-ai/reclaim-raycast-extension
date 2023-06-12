@@ -26,7 +26,7 @@
     {
       "name": "notifications",
       "title": "Reclaim Notifications",
-      "description": "Show unread notifications in the Menu Bar.",
+      "description": "Show notifications in the Menu Bar.",
       "mode": "menu-bar",
       "subtitle": "Reclaim",
       "icon": "command-icon.png",
@@ -50,13 +50,20 @@
           "name": "time",
           "title": "time",
           "placeholder": "Time needed",
-          "required": true
+          "required": true,
+          "description": "test!!"
         }
       ]
     },
     {
-      "name": "list-events",
+      "name": "my-calendar",
       "title": "My Calendar",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "ask-anything",
+      "title": "Ask Anything",
       "description": "",
       "mode": "view"
     }

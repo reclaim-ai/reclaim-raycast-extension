@@ -1,16 +1,11 @@
 import { Detail, getPreferenceValues, useNavigation } from "@raycast/api";
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
-import { endOfTomorrow, format } from "date-fns";
-import { ApiResponseEvents, ApiResponseInterpreter } from "./useApi.types";
-
-interface Preferences {
-  apiToken: string;
-}
+import axios, { AxiosRequestConfig } from "axios";
+import { ApiPreferences } from "./useApi.types";
 
 const API_URL = "https://weber.api.reclaim-test.com/api";
 
 const useApi = () => {
-  const { apiToken } = getPreferenceValues<Preferences>();
+  const { apiToken } = getPreferenceValues<ApiPreferences>();
 
   const { push } = useNavigation();
 
@@ -35,35 +30,7 @@ const useApi = () => {
     });
   };
 
-  const sendToInterpreter = async (category: string, message: string) => {
-    try {
-      return await fetcher<ApiResponseInterpreter>("/interpreter/message", {
-        method: "POST",
-        data: {
-          message,
-          category,
-        },
-      });
-    } catch (error) {
-      console.log((error as AxiosError).response?.data);
-    }
-  };
-
-  const getEvents = async () => {
-    try {
-      return await fetcher<ApiResponseEvents>("/events", {
-        method: "GET",
-        params: {
-          start: format(new Date(), "yyyy-MM-dd"),
-          end: format(endOfTomorrow(), "yyyy-MM-dd"),
-        },
-      });
-    } catch (error) {
-      console.log((error as AxiosError).response?.data);
-    }
-  };
-
-  return { sendToInterpreter, getEvents };
+  return { fetcher };
 };
 
 export default useApi;
