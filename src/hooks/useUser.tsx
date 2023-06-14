@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { User } from "../types/user";
 import { axiosPromiseData } from "../utils/axiosPromise";
-import useApi from "./useApi";
+import reclaimApi from "./useApi";
 import { ApiResponseUser } from "./useUser.types";
 
 const useUser = () => {
-  const { fetcher } = useApi();
+  const { fetcher } = reclaimApi();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleGetUser = async () => {
+  const handleGetUser = useCallback(async () => {
     try {
+      if (currentUser) return;
       setIsLoading(true);
       const [user, error] = await axiosPromiseData<ApiResponseUser>(fetcher("/users/current"));
 
@@ -22,7 +23,7 @@ const useUser = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     void handleGetUser();

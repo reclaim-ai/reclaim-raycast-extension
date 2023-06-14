@@ -1,3 +1,4 @@
+export type EventType = "WORK" | "MEETING";
 export interface Event {
   allocatedTimeChunks: number;
   assist: {
@@ -57,7 +58,7 @@ export interface Event {
   timeChunks: number;
   title: string;
   titleSeenByOthers: string;
-  type: string;
+  type: EventType;
   underAssistControl: boolean;
   updated: string;
   version: string;

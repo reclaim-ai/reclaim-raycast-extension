@@ -20,6 +20,24 @@
       "default": "",
       "placeholder": "e.g. 1234567890-ABCDEFG-1234567890",
       "required": true
+    },
+    {
+      "name": "timePolicy",
+      "title": "Reclaim.ai preferred Time Policy",
+      "description": "Your preferred Time Policy from reclaim.ai",
+      "type": "dropdown",
+      "default": "WORK",
+      "data": [
+        {
+          "title": "Work",
+          "value": "WORK"
+        },
+        {
+          "title": "Personal",
+          "value": "PERSONAL"
+        }
+      ],
+      "required": true
     }
   ],
   "commands": [
@@ -36,7 +54,7 @@
       "name": "quick-task",
       "title": "Quick Task",
       "description": "",
-      "mode": "view",
+      "mode": "no-view",
       "arguments": [
         {
           "type": "text",
@@ -58,6 +76,12 @@
     {
       "name": "my-calendar",
       "title": "My Calendar",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "task-form",
+      "title": "Create task",
       "description": "",
       "mode": "view"
     },

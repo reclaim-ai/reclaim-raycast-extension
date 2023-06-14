@@ -1,11 +1,11 @@
 import { Detail, getPreferenceValues, useNavigation } from "@raycast/api";
 import axios, { AxiosRequestConfig } from "axios";
-import { ApiPreferences } from "./useApi.types";
+import { NativePreferences } from "../types/preferences";
 
-const API_URL = "https://weber.api.reclaim-test.com/api";
+export const API_URL = "https://weber.api.reclaim-test.com/api";
 
 const useApi = () => {
-  const { apiToken } = getPreferenceValues<ApiPreferences>();
+  const { apiToken } = getPreferenceValues<NativePreferences>();
 
   const { push } = useNavigation();
 

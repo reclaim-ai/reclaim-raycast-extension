@@ -1,10 +1,10 @@
 import { addDays, endOfDay, format } from "date-fns";
 import { axiosPromiseData } from "../utils/axiosPromise";
-import useApi from "./useApi";
+import reclaimApi from "./useApi";
 import { ApiResponseEvents } from "./useEvent.types";
 
 const useEvent = () => {
-  const { fetcher } = useApi();
+  const { fetcher } = reclaimApi();
 
   const getEvents = async () => {
     try {

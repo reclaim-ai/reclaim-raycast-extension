@@ -1,8 +1,109 @@
 //
 
 import { Icon, LaunchType, MenuBarExtra, launchCommand, open } from "@raycast/api";
+import { useCalendar } from "./hooks/useCalendar";
+import { eventColors } from "./utils/events";
+import { parseEmojiField } from "./utils/string";
+import { EventType } from "./types/event";
+
+const ActionOptionsWithContext = ({ type, eventId }: { type: EventType; eventId: string }) => {
+  if (type === "WORK") {
+    return (
+      <MenuBarExtra.Item
+        title="Complete task"
+        onAction={() => {
+          //
+        }}
+      />
+    );
+  }
+  if (type === "MEETING") {
+    return (
+      <MenuBarExtra.Item
+        title="Join meeting"
+        onAction={() => {
+          //
+        }}
+      />
+    );
+  }
+  return <></>;
+};
 
 export default function Command() {
+  const { loading, error, eventsNow, eventNext, eventsTomorrow } = useCalendar();
+
+  const handleOpenReclaim = () => {
+    open("https://app.reclaim.ai");
+  };
+
+  const handleOpenRaycast = async () => {
+    await launchCommand({ name: "list-events", type: LaunchType.UserInitiated });
+  };
+
+  const handleTitle = parseEmojiField(
+    eventsNow[0] ? eventsNow[0].title : eventNext ? eventNext.title : "No events"
+  ).textWithoutEmoji;
+
+  return (
+    <MenuBarExtra isLoading={loading} icon={"command-icon.png"} title={loading ? "Loading..." : handleTitle}>
+      {!!eventsNow && eventsNow.length > 0 && (
+        <>
+          <MenuBarExtra.Section title="Now" />
+          {eventsNow.map((event) => (
+            <MenuBarExtra.Submenu
+              key={event.eventId}
+              icon={{
+                source: Icon.Dot,
+                tintColor: eventColors[event.color],
+              }}
+              title={parseEmojiField(event.title).textWithoutEmoji}
+            >
+              <ActionOptionsWithContext type={event.type} eventId={event.eventId} />
+            </MenuBarExtra.Submenu>
+          ))}
+        </>
+      )}
+      {!!eventNext && (
+        <>
+          <MenuBarExtra.Section title="Next" />
+          <MenuBarExtra.Submenu
+            icon={{
+              source: Icon.Dot,
+              tintColor: eventColors[eventNext.color],
+            }}
+            title={parseEmojiField(eventNext.title).textWithoutEmoji}
+          >
+            <ActionOptionsWithContext type={eventNext.type} eventId={eventNext.eventId} />
+          </MenuBarExtra.Submenu>
+        </>
+      )}
+      {!!eventsTomorrow && eventsTomorrow.length > 0 && (
+        <>
+          <MenuBarExtra.Section title="Tomorrow" />
+          {eventsTomorrow.map((event) => (
+            <MenuBarExtra.Submenu
+              key={event.eventId}
+              icon={{
+                source: Icon.Dot,
+                tintColor: eventColors[event.color],
+              }}
+              title={parseEmojiField(event.title).textWithoutEmoji}
+            >
+              <ActionOptionsWithContext type={event.type} eventId={event.eventId} />
+            </MenuBarExtra.Submenu>
+          ))}
+        </>
+      )}
+
+      <MenuBarExtra.Separator />
+      <MenuBarExtra.Item title="Open Reclaim" onAction={handleOpenReclaim} />
+      <MenuBarExtra.Item title="Open Raycast" onAction={handleOpenRaycast} />
+    </MenuBarExtra>
+  );
+}
+
+function Command2() {
   const handleOpenReclaim = () => {
     open("https://app.reclaim.ai");
   };

@@ -1,11 +1,8 @@
-import { Action, ActionPanel, Color, Detail, Icon, List, Toast, open, showToast } from "@raycast/api";
-import { useEffect, useState } from "react";
-import { useEvent } from "./hooks/useEvent";
-import { useUser } from "./hooks/useUser";
-import { sortEvents } from "./utils/arrays";
-import { formatDisplayEventDate } from "./utils/dates";
-import { eventColors } from "./utils/events";
+import { Action, ActionPanel, Color, Detail, Icon, List, open } from "@raycast/api";
+import { useState } from "react";
+import { useCalendar } from "./hooks/useCalendar";
 import { Event } from "./types/event";
+import { eventColors } from "./utils/events";
 
 const EventActions = ({ event }: { event: Event }) => {
   return (
@@ -25,70 +22,18 @@ const EventActions = ({ event }: { event: Event }) => {
 
 export default function Command() {
   const [searchText, setSearchText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [events, setEvents] = useState<Event[]>([]);
 
-  const { currentUser: user, isLoading: isLoadingUser } = useUser();
-  const { getEvents } = useEvent();
+  const { loading, error, eventsNow, eventsToday, eventsTomorrow, showFormattedEventTitle, eventNext } = useCalendar();
 
-  // const filteredEvents = events.filter((event) => event.title.toLowerCase().includes(searchText.toLowerCase()));
+  
 
-  const showFormattedEventTitle = (event: Event) => {
-    return `${formatDisplayEventDate({
-      start: new Date(event.eventStart),
-      end: new Date(event.eventEnd),
-      hoursFormat: user?.settings.format24HourTime ? "24h" : "12h",
-    })}  ${event.title}`;
-  };
-
-  const parsedEvents = events
-    .filter((event) => {
-      const isPast = new Date(event.eventEnd).valueOf() < new Date().valueOf();
-      return !isPast;
-    })
-    .map((event) => {
-      const endsInFuture = new Date(event.eventEnd).valueOf() > new Date().valueOf();
-      const startsInPast = new Date(event.eventStart).valueOf() < new Date().valueOf();
-
-      const isNow = startsInPast && endsInFuture;
-      const isToday = new Date(event.eventStart).getDate() === new Date().getDate();
-      const isTomorrow = new Date(event.eventStart).getDate() === new Date().getDate() + 1;
-
-      return { ...event, section: isNow ? "NOW" : isTomorrow ? "TOMORROW" : isToday ? "TODAY" : "OTHER" };
-    })
-    .sort(sortEvents);
-
-  const eventsNow = parsedEvents.filter((event) => event.section === "NOW");
-  const [eventNext, ...eventsToday] = parsedEvents.filter((event) => event.section === "TODAY");
-  const eventsTomorrow = parsedEvents.filter((event) => event.section === "TOMORROW");
-  // const eventsOther = parsedEvents.filter((event) => event.section === "OTHER");
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await showToast({
-        style: Toast.Style.Animated,
-        title: "Loading calendar...",
-      });
-
-      const events = await getEvents();
-      setEvents(events || []);
-
-      setLoading(false);
-      await showToast({
-        style: Toast.Style.Success,
-        title: "Loaded!",
-      });
-    })();
-  }, []);
-
-  if (!user && !loading && !isLoadingUser) {
+  if (error) {
     return <Detail markdown={`Error while fetching user. Please, check your API token and retry.`} />;
   }
 
   return (
     <List
-      isLoading={loading || isLoadingUser}
+      isLoading={loading}
       searchText={searchText}
       onSearchTextChange={setSearchText}
       navigationTitle="Search events"
