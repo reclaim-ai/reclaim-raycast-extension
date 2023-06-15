@@ -48,26 +48,27 @@ export default async function Command(props: Props) {
 
     const durationBlock = Number(parseDurationToMinutes(formatDuration(time))) / TIME_BLOCK_IN_MINUTES;
 
+    const data = {
+      title: event,
+      eventCategory: preferredTimePolicy || "WORK",
+      timeChunksRequired: durationBlock,
+      snoozeUntil: new Date().toJSON(),
+      due: endOfDay(new Date()).toJSON(),
+      minChunkSize: durationBlock,
+      maxChunkSize: durationBlock,
+      alwaysPrivate: true,
+    };
+
+    console.log("### => [POST] /tasks", data);
+
     const [task, error] = await axiosPromiseData(
       fetcher("/tasks", {
         method: "POST",
-        data: {
-          title: event,
-          // eventColor: "",
-          eventCategory: preferredTimePolicy || "WORK",
-          timeChunksRequired: durationBlock,
-          snoozeUntil: new Date().toJSON(),
-          due: endOfDay(new Date()).toJSON(),
-          minChunkSize: durationBlock,
-          maxChunkSize: durationBlock,
-          // notes: "",
-          // priority: "",
-          alwaysPrivate: true,
-        },
+        data,
       })
     );
-
-    console.log("### =>", task);
+    
+    console.log("### => [RESPONSE] /tasks", data);
 
     if (!task && error) throw error;
 

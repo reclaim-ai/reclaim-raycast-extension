@@ -1,8 +1,9 @@
 import { Action, ActionPanel, Color, Detail, Icon, List, open } from "@raycast/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCalendar } from "./hooks/useCalendar";
 import { Event } from "./types/event";
 import { eventColors } from "./utils/events";
+import { useEvent } from "./hooks/useEvent";
 
 const EventActions = ({ event }: { event: Event }) => {
   return (
@@ -23,13 +24,16 @@ const EventActions = ({ event }: { event: Event }) => {
 export default function Command() {
   const [searchText, setSearchText] = useState("");
 
-  const { loading, error, eventsNow, eventsToday, eventsTomorrow, showFormattedEventTitle, eventNext } = useCalendar();
-
-  
+  const { loading, error, eventsNow, eventsToday, eventsTomorrow, eventNext } = useCalendar();
+  const { showFormattedEventTitle, fetchEvents } = useEvent();
 
   if (error) {
     return <Detail markdown={`Error while fetching user. Please, check your API token and retry.`} />;
   }
+
+  useEffect(() => {
+    void fetchEvents();
+  }, []);
 
   return (
     <List

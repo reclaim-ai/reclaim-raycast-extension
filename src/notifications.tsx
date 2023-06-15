@@ -1,52 +1,80 @@
 //
 
-import { Icon, LaunchType, MenuBarExtra, launchCommand, open } from "@raycast/api";
+import { Cache, Icon, LaunchType, MenuBarExtra, launchCommand, open } from "@raycast/api";
 import { useCalendar } from "./hooks/useCalendar";
 import { eventColors } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
-import { EventType } from "./types/event";
 
-const ActionOptionsWithContext = ({ type, eventId }: { type: EventType; eventId: string }) => {
-  if (type === "WORK") {
-    return (
-      <MenuBarExtra.Item
-        title="Complete task"
-        onAction={() => {
-          //
-        }}
-      />
-    );
-  }
-  if (type === "MEETING") {
-    return (
-      <MenuBarExtra.Item
-        title="Join meeting"
-        onAction={() => {
-          //
-        }}
-      />
-    );
-  }
-  return <></>;
+import { intervalToDuration } from "date-fns";
+import { useEffect, useState } from "react";
+import { useEvent } from "./hooks/useEvent";
+import { Event } from "./types/event";
+import { getMiniDuration } from "./utils/dates";
+
+const cache = new Cache();
+
+const ActionOptionsWithContext = ({ event }: { event: Event }) => {
+  const { getEventActions } = useEvent();
+
+  const actions = getEventActions(event);
+
+  return (
+    <>
+      {actions.map((action) => (
+        <MenuBarExtra.Item
+          key={action.title}
+          title={action.title}
+          // shortcut={{ modifiers: ["cmd"], key: "enter" }}
+          // icon={{ source: Icon.Dot }}
+          onAction={action.action}
+        />
+      ))}
+    </>
+  );
 };
 
 export default function Command() {
-  const { loading, error, eventsNow, eventNext, eventsTomorrow } = useCalendar();
+  const { loading, eventsNow, eventNext, eventsToday, eventsTomorrow } = useCalendar();
+  const { showFormattedEventTitle } = useEvent();
+  const cachedTitle = cache.get("menuBarTitle");
+
+  const [menuBarTitle, setMenuBarTitle] = useState(cachedTitle ? cachedTitle : "No upcoming events");
 
   const handleOpenReclaim = () => {
     open("https://app.reclaim.ai");
   };
 
   const handleOpenRaycast = async () => {
-    await launchCommand({ name: "list-events", type: LaunchType.UserInitiated });
+    await launchCommand({ name: "my-calendar", type: LaunchType.UserInitiated });
   };
 
-  const handleTitle = parseEmojiField(
-    eventsNow[0] ? eventsNow[0].title : eventNext ? eventNext.title : "No events"
-  ).textWithoutEmoji;
+  useEffect(() => {
+    if (eventsNow && eventsNow.length > 0) {
+      const duration = intervalToDuration({
+        start: new Date(),
+        end: new Date(eventsNow[0].eventEnd),
+      });
+      const text = `Ends in ${getMiniDuration(duration)}: ${parseEmojiField(eventsNow[0].title).textWithoutEmoji}`;
+
+      cache.set("menuBarTitle", text);
+      setMenuBarTitle(text);
+      return;
+    }
+    if (!!eventsNow && eventNext) {
+      const duration = intervalToDuration({
+        start: new Date(),
+        end: new Date(eventNext.eventStart),
+      });
+      const text = `Starts in ${getMiniDuration(duration)}: ${parseEmojiField(eventNext.title).textWithoutEmoji}`;
+
+      cache.set("menuBarTitle", text);
+      setMenuBarTitle(text);
+      return;
+    }
+  }, [eventsNow, eventNext]);
 
   return (
-    <MenuBarExtra isLoading={loading} icon={"command-icon.png"} title={loading ? "Loading..." : handleTitle}>
+    <MenuBarExtra isLoading={loading} icon={"command-icon.png"} title={menuBarTitle}>
       {!!eventsNow && eventsNow.length > 0 && (
         <>
           <MenuBarExtra.Section title="Now" />
@@ -57,9 +85,9 @@ export default function Command() {
                 source: Icon.Dot,
                 tintColor: eventColors[event.color],
               }}
-              title={parseEmojiField(event.title).textWithoutEmoji}
+              title={showFormattedEventTitle(event, true)}
             >
-              <ActionOptionsWithContext type={event.type} eventId={event.eventId} />
+              <ActionOptionsWithContext event={event} />
             </MenuBarExtra.Submenu>
           ))}
         </>
@@ -72,10 +100,27 @@ export default function Command() {
               source: Icon.Dot,
               tintColor: eventColors[eventNext.color],
             }}
-            title={parseEmojiField(eventNext.title).textWithoutEmoji}
+            title={showFormattedEventTitle(eventNext, true)}
           >
-            <ActionOptionsWithContext type={eventNext.type} eventId={eventNext.eventId} />
+            <ActionOptionsWithContext event={eventNext} />
           </MenuBarExtra.Submenu>
+        </>
+      )}
+      {!!eventsToday && eventsToday.length > 0 && (
+        <>
+          <MenuBarExtra.Section title="Today" />
+          {eventsToday.map((event) => (
+            <MenuBarExtra.Submenu
+              key={event.eventId}
+              icon={{
+                source: Icon.Dot,
+                tintColor: eventColors[event.color],
+              }}
+              title={showFormattedEventTitle(event, true)}
+            >
+              <ActionOptionsWithContext event={event} />
+            </MenuBarExtra.Submenu>
+          ))}
         </>
       )}
       {!!eventsTomorrow && eventsTomorrow.length > 0 && (
@@ -88,9 +133,9 @@ export default function Command() {
                 source: Icon.Dot,
                 tintColor: eventColors[event.color],
               }}
-              title={parseEmojiField(event.title).textWithoutEmoji}
+              title={showFormattedEventTitle(event, true)}
             >
-              <ActionOptionsWithContext type={event.type} eventId={event.eventId} />
+              <ActionOptionsWithContext event={event} />
             </MenuBarExtra.Submenu>
           ))}
         </>
@@ -99,93 +144,6 @@ export default function Command() {
       <MenuBarExtra.Separator />
       <MenuBarExtra.Item title="Open Reclaim" onAction={handleOpenReclaim} />
       <MenuBarExtra.Item title="Open Raycast" onAction={handleOpenRaycast} />
-    </MenuBarExtra>
-  );
-}
-
-function Command2() {
-  const handleOpenReclaim = () => {
-    open("https://app.reclaim.ai");
-  };
-
-  const handleOpenRaycast = async () => {
-    await launchCommand({ name: "list-events", type: LaunchType.UserInitiated });
-  };
-
-  return (
-    <MenuBarExtra
-      icon={"command-icon.png"}
-      // title="Upcoming in 15 min: Talk w/ Henry"
-      // icon={{
-      //   source: Icon.Dot,
-      //   tintColor: "#FF0000",
-      // }}
-      title="Ending in 30 min: Some event"
-      tooltip="Reclaim.ai"
-    >
-      <MenuBarExtra.Section title="Ending in 30 min" />
-      <MenuBarExtra.Submenu
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#FF0000",
-        }}
-        title="Some event"
-        // onAction={handleOpenReclaim}
-      >
-        <MenuBarExtra.Item title="Join meeting" onAction={handleOpenReclaim} />
-        <MenuBarExtra.Item title="Open in Google Calendar" onAction={handleOpenReclaim} />
-      </MenuBarExtra.Submenu>
-      <MenuBarExtra.Section title="Next" />
-      <MenuBarExtra.Item
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#00FF00",
-        }}
-        title="Next event 1"
-        onAction={handleOpenReclaim}
-      />
-      <MenuBarExtra.Item
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#FFFF00",
-        }}
-        title="Next event 2"
-        onAction={handleOpenReclaim}
-      />
-      <MenuBarExtra.Section title="Tomorrow" />
-      <MenuBarExtra.Item
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#2f2f2f",
-        }}
-        title="Tomorrow event"
-        onAction={handleOpenReclaim}
-      />
-      <MenuBarExtra.Separator />
-      <MenuBarExtra.Item title="Open Reclaim" onAction={handleOpenReclaim} />
-      <MenuBarExtra.Item title="Open Raycast" onAction={handleOpenRaycast} />
-      {/* <MenuBarExtra.Item title="Current meeting"  />
-      <MenuBarExtra.Item
-        title="Join videoconference"
-        onAction={() => {
-          console.log("seen pull request clicked");
-        }}
-      />
-
-      <MenuBarExtra.Item title="----------" />
-      <MenuBarExtra.Item
-        title="Some important meeting."
-        onAction={() => {
-          console.log("seen pull request clicked");
-        }}
-      />
-      <MenuBarExtra.Item title="Current task" />
-      <MenuBarExtra.Item
-        title="some task here?"
-        onAction={() => {
-          console.log("unseen pull request clicked");
-        }}
-      /> */}
     </MenuBarExtra>
   );
 }

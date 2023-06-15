@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { Duration, format, formatDuration as fnsFormatDuration } from "date-fns";
 
 export const formatDisplayEventHours = ({
   start,
@@ -101,6 +101,16 @@ export const formatDuration = (e: string | undefined) => {
     return formatStrDuration(`${e} m`);
   }
   return formatStrDuration(e);
+};
+
+export const getMiniDuration = (d: Duration) => {
+  const str = fnsFormatDuration(d, {
+    format: ["hours", "minutes"],
+  });
+
+  const outputSplit = str.replaceAll("s", "").replaceAll("hour", "h").replaceAll("minute", "m").split(" hour");
+
+  return outputSplit.map((x) => x.replaceAll(" ", "")).join(" ");
 };
 
 export const TIME_BLOCK_IN_MINUTES = 15;

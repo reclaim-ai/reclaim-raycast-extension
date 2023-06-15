@@ -40,8 +40,6 @@ export default () => {
       notes,
     });
 
-    console.log("### =>", created);
-
     if (created) {
       await showToast(Toast.Style.Success, "Task created", `Task ${title} created successfully`);
       await popToRoot();

@@ -48,7 +48,7 @@
       "mode": "menu-bar",
       "subtitle": "Reclaim",
       "icon": "command-icon.png",
-      "interval": "5m"
+      "interval": "1m"
     },
     {
       "name": "quick-task",
@@ -76,6 +76,12 @@
     {
       "name": "my-calendar",
       "title": "My Calendar",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "scheduling-links",
+      "title": "View Scheduling Links",
       "description": "",
       "mode": "view"
     },

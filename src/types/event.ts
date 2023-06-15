@@ -1,4 +1,17 @@
-export type EventType = "WORK" | "MEETING";
+export enum ReclaimEventTypeEnum {
+  USER = "USER",
+  SYNC = "SYNC",
+  HABITASSIGNMENT = "HABIT_ASSIGNMENT",
+  ONEONONEASSIGNMENT = "ONE_ON_ONE_ASSIGNMENT",
+  TASKASSIGNMENT = "TASK_ASSIGNMENT",
+  CONFBUFFER = "CONF_BUFFER",
+  TRAVELBUFFER = "TRAVEL_BUFFER",
+  SCHEDULINGLINKMEETING = "SCHEDULING_LINK_MEETING",
+  UNKNOWN = "UNKNOWN",
+}
+
+export type ReclaimEventType = `${ReclaimEventTypeEnum}`;
+
 export interface Event {
   allocatedTimeChunks: number;
   assist: {
@@ -7,7 +20,7 @@ export interface Event {
     customHabit: boolean;
     dailyHabitId: number;
     defended: boolean;
-    eventType: string;
+    eventType?: ReclaimEventTypeEnum;
     habitOrTask: boolean;
     lastControlledHash: number;
     pinned: boolean;
@@ -58,7 +71,7 @@ export interface Event {
   timeChunks: number;
   title: string;
   titleSeenByOthers: string;
-  type: EventType;
+  type: string;
   underAssistControl: boolean;
   updated: string;
   version: string;
