@@ -12,23 +12,80 @@ export enum ReclaimEventTypeEnum {
 
 export type ReclaimEventType = `${ReclaimEventTypeEnum}`;
 
+export enum AssistType {
+  TASK = "TASK",
+  CUSTOMDAILY = "CUSTOM_DAILY",
+  CATCHUPAM = "CATCHUP_AM",
+  CATCHUPPM = "CATCHUP_PM",
+  LUNCH = "LUNCH",
+  FOCUS = "FOCUS",
+  TRAVELPRE = "TRAVEL_PRE",
+  TRAVELPOST = "TRAVEL_POST",
+  CONBUF = "CONBUF",
+}
+
+export enum AssistStatus {
+  CONTROLLED = "CONTROLLED",
+  RELEASED = "RELEASED",
+  ARCHIVED = "ARCHIVED",
+}
+
+export enum LockState {
+  MANUALLYLOCKED = "MANUALLY_LOCKED",
+  ADJUSTED = "ADJUSTED",
+  UPCOMINGWINDOW = "UPCOMING_WINDOW",
+  MANUALLYUNLOCKED = "MANUALLY_UNLOCKED",
+  DELETED = "DELETED",
+  DECLINED = "DECLINED",
+  INTHEPAST = "IN_THE_PAST",
+}
+
+export interface AssistPolicyOverride {
+  windowStart: string;
+  idealTime: string;
+  windowEnd: string;
+  durationMin: number;
+  durationMax: number;
+  forceDefend: boolean;
+}
+
+export enum RecurringAssignmentType {
+  ONEONONE = "ONE_ON_ONE",
+  DAILYHABIT = "DAILY_HABIT",
+  TASK = "TASK",
+}
+
+export interface AssistDetails {
+  type?: AssistType;
+  customHabit?: boolean;
+  habitOrTask?: boolean;
+  task?: boolean;
+  conferenceBuffer?: boolean;
+  status?: AssistStatus;
+
+  /** The source event id for a travel assist event. */
+  travelNewEventId?: string | null;
+
+  /** The source event id for a conference (decompression time) event. */
+  conferenceEventId?: string | null;
+  lastControlledUpdate?: string;
+  lastControlledHash?: number;
+  defended?: boolean;
+  pinned?: boolean;
+  lockState?: LockState | null;
+  dailyHabitId?: number | null;
+  taskId?: number | null;
+  taskIndex?: number | null;
+  policyOverride?: AssistPolicyOverride | null;
+  lastManualAdjustment?: string;
+  recurringAssignmentType?: RecurringAssignmentType;
+  eventType?: ReclaimEventType;
+  assistReferenceValid?: boolean;
+}
+
 export interface Event {
   allocatedTimeChunks: number;
-  assist: {
-    assistReferenceValid: boolean;
-    conferenceBuffer: boolean;
-    customHabit: boolean;
-    dailyHabitId: number;
-    defended: boolean;
-    eventType?: ReclaimEventTypeEnum;
-    habitOrTask: boolean;
-    lastControlledHash: number;
-    pinned: boolean;
-    recurringAssignmentType: string;
-    status: string;
-    task: boolean;
-    type: string;
-  };
+  assist: AssistDetails;
   calendarId: number;
   category: string;
   color:

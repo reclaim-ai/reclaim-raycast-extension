@@ -5,7 +5,7 @@ import { FilteredAnything } from "./filtered-anything";
 
 type ListType = {
   title: string;
-  type: "tasks" | "scheduling-links";
+  type: "task" | "scheduling-link";
 };
 
 export default function Command() {
@@ -20,11 +20,11 @@ export default function Command() {
     setList([
       {
         title: "Ask anything about Tasks",
-        type: "tasks",
+        type: "task",
       },
       {
         title: "Ask anything about Scheduling Links",
-        type: "scheduling-links",
+        type: "scheduling-link",
       },
     ]);
   };

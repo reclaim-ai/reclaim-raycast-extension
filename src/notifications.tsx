@@ -16,7 +16,15 @@ const cache = new Cache();
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
 
-  const actions = getEventActions(event);
+  const [actions, setActions] = useState<{ title: string; action: () => void }[]>([]);
+
+  const loadActions = async () => {
+    setActions(await getEventActions(event));
+  };
+
+  useEffect(() => {
+    void loadActions();
+  }, []);
 
   return (
     <>
@@ -49,6 +57,14 @@ export default function Command() {
   };
 
   useEffect(() => {
+    // no events at all. (next or now)
+    if (!eventsNow.length && !eventNext) {
+      cache.set("menuBarTitle", "No upcoming events");
+      setMenuBarTitle("No upcoming events");
+      return;
+    }
+
+    // has events going on now.
     if (eventsNow && eventsNow.length > 0) {
       const duration = intervalToDuration({
         start: new Date(),
@@ -60,6 +76,8 @@ export default function Command() {
       setMenuBarTitle(text);
       return;
     }
+
+    // has next event.
     if (!!eventsNow && eventNext) {
       const duration = intervalToDuration({
         start: new Date(),

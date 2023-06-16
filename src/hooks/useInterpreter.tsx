@@ -1,31 +1,50 @@
-// const sendToInterpreter = async (category: string, message: string) => {
-//   try {
-//     const [response, error] = await axiosPromise<ApiResponseInterpreter>(
-//       fetcher("/interpreter/message", {
-//         method: "POST",
-//         data: {
-//           message,
-//           category,
-//         },
-//       })
-//     );
-//     if (!response || error) throw error;
-//     console.log("### =>", response);
+import { axiosPromiseData } from "../utils/axiosPromise";
+import useApi from "./useApi";
+import { ApiResponseInterpreter } from "./useInterpreter.types";
 
-//     return response;
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
+const useInterpreter = () => {
+  const { fetcher } = useApi();
 
-// const confirmInterpreterMessage = async (planUuid: string) => {
-//   try {
-//     // TODO: add type
-//     const rawRequest = await fetcher(`/interpreter/plans/applied/${planUuid}`, {
-//       method: "POST",
-//     });
-//     return { statusCode: rawRequest.status };
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
+  const sendToInterpreter = async (category: string, message: string) => {
+    try {
+      const data = {
+        message,
+        category,
+      };
+
+      console.log("### => [POST] interpreter", data);
+
+      const [response, error] = await axiosPromiseData<ApiResponseInterpreter>(
+        fetcher("/interpreter/message", {
+          method: "POST",
+          data,
+        })
+      );
+      if (!response || error) throw error;
+
+      console.log("### => [RESPONSE] interpreter", response.interpretedPlans);
+      return response;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const confirmInterpreterMessage = async (planUuid: string) => {
+    try {
+      // TODO: add type
+      const rawRequest = await fetcher(`/interpreter/plans/applied/${planUuid}`, {
+        method: "POST",
+      });
+      return { statusCode: rawRequest.status };
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return {
+    sendToInterpreter,
+    confirmInterpreterMessage,
+  };
+};
+
+export default useInterpreter;

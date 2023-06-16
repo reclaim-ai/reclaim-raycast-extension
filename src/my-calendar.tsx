@@ -37,6 +37,7 @@ export default function Command() {
 
   return (
     <List
+      filtering={true}
       isLoading={loading}
       searchText={searchText}
       onSearchTextChange={setSearchText}

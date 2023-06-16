@@ -28,6 +28,7 @@ export const formatDisplayHours = (date: Date, hoursFormat: "12h" | "24h" = "12h
  * @returns the amount minutes in number
  */
 export const parseDurationToMinutes = (str: string): number => {
+  str = str.toLowerCase();
   if (str === "" || !str) return 0;
   const isMinutes = (s: string) => s[s.length - 1] === "m";
 
@@ -107,6 +108,15 @@ export const getMiniDuration = (d: Duration) => {
   const str = fnsFormatDuration(d, {
     format: ["hours", "minutes"],
   });
+
+  // 0h 0m
+  // if (str === "") {
+  //   return fnsFormatDuration(d, {
+  //     format: ["seconds"],
+  //   })
+  //     .replaceAll("second", "")
+  //     .replaceAll("ss", "s");
+  // }
 
   const outputSplit = str.replaceAll("s", "").replaceAll("hour", "h").replaceAll("minute", "m").split(" hour");
 

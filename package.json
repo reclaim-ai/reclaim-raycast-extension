@@ -52,24 +52,23 @@
     },
     {
       "name": "quick-task",
-      "title": "Quick Task",
+      "title": "Create task",
       "description": "",
-      "mode": "no-view",
+      "mode": "view",
       "arguments": [
         {
           "type": "text",
           "name": "event",
           "title": "event",
           "placeholder": "Task",
-          "required": true
+          "required": false
         },
         {
           "type": "text",
           "name": "time",
           "title": "time",
           "placeholder": "Time needed",
-          "required": true,
-          "description": "test!!"
+          "required": false
         }
       ]
     },
@@ -82,12 +81,6 @@
     {
       "name": "scheduling-links",
       "title": "View Scheduling Links",
-      "description": "",
-      "mode": "view"
-    },
-    {
-      "name": "task-form",
-      "title": "Create task",
       "description": "",
       "mode": "view"
     },

@@ -7,13 +7,8 @@ const SLActions = ({ link }: { link: SchedulingLink }) => {
   const url = `https://app.reclaim.ai/m/${link.pageSlug}/${link.slug}`;
   return (
     <ActionPanel>
-      <Action.CopyToClipboard
-        title="Copy Link to Clipboard"
-        content={url}
-        // onAction={() => {
-        //   open(`https://app.reclaim.ai/planner/eventId=${event.eventId}`);
-        // }}
-      />
+      <Action.CopyToClipboard title="Copy Link to Clipboard" content={url} />
+      <Action.Open title="Open in Browser" target={url} />
     </ActionPanel>
   );
 };
@@ -22,16 +17,15 @@ export default function Command() {
   const [searchText, setSearchText] = useState("");
 
   const [links, setLinks] = useState<SchedulingLink[]>([]);
+  const [loading, setIsLoading] = useState<boolean>(false);
 
   const { getSchedulingLinks } = useSchedulingLinks();
 
-  // if (error) {
-  //   return <Detail markdown={`Error while fetching user. Please, check your API token and retry.`} />;
-  // }
-
   const fetchLinks = async () => {
+    setIsLoading(true);
     const schedulingLinks = await getSchedulingLinks();
     setLinks(schedulingLinks || []);
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -40,22 +34,11 @@ export default function Command() {
 
   return (
     <List
-      // isLoading={loading}
+      isLoading={loading}
+      filtering={true}
       searchText={searchText}
       onSearchTextChange={setSearchText}
       navigationTitle="Search Scheduling Links"
-      // searchBarPlaceholder="Search your event"
-      // searchBarAccessory={
-      //   <List.Dropdown
-      //     tooltip="Select Todo List"
-      //     value={"All"}
-      //     //   onChange={(newValue) => setState((previous) => ({ ...previous, filter: newValue as Filter }))}
-      //   >
-      //     <List.Dropdown.Item title="All" value={"All"} />
-      //     <List.Dropdown.Item title="Open" value={"Open"} />
-      //     <List.Dropdown.Item title="Completed" value={"Completed"} />
-      //   </List.Dropdown>
-      // }
     >
       <>
         {!!links.length && (
@@ -67,20 +50,6 @@ export default function Command() {
                 icon={{
                   source: Icon.Calendar,
                 }}
-                //   detail={item}
-                accessories={
-                  [
-                    // // { text: `An Accessory Text`, icon: Icon.Hammer },
-                    // // { text: { value: `A Colored Accessory Text`, color: Color.Orange }, icon: Icon.Hammer },
-                    // // { icon: Icon.Person, tooltip: "A person" },
-                    // { date: new Date(item.eventStart) },
-                    // // { date: new Date() },
-                    // // { tag: new Date() },
-                    // // { tag: { value: new Date(), color: Color.Magenta } },
-                    // { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
-                    // // { tag: { value: item.now ? "now" : "nowNot", color: Color.Blue } },
-                  ]
-                }
                 actions={<SLActions link={sl} />}
               />
             ))}

@@ -13,9 +13,13 @@ interface FormValues {
   notes: string;
 }
 
-export default () => {
+export default (props: { timeNeeded?: string; title?: string }) => {
+  
+
+  const { timeNeeded: userTimeNeeded, title: userTitle } = props;
+
   const { createTask } = useTask();
-  const [timeNeeded, setTimeNeeded] = useState("");
+  const [timeNeeded, setTimeNeeded] = useState(userTimeNeeded || "");
   const [timeNeededError, setTimeNeededError] = useState<string | undefined>();
   const [durationMin, setDurationMin] = useState("");
   const [durationMinError, setDurationMinError] = useState<string | undefined>();
@@ -56,7 +60,7 @@ export default () => {
         </ActionPanel>
       }
     >
-      <Form.TextField id="title" title="Title" />
+      <Form.TextField id="title" title="Title" defaultValue={userTitle} />
       <Form.Separator />
       <Form.TextField
         id="timeNeeded"
