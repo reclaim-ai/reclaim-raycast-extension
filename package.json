@@ -22,21 +22,12 @@
       "required": true
     },
     {
-      "name": "timePolicy",
-      "title": "Reclaim.ai preferred Time Policy",
-      "description": "Your preferred Time Policy from reclaim.ai",
-      "type": "dropdown",
-      "default": "WORK",
-      "data": [
-        {
-          "title": "Work",
-          "value": "WORK"
-        },
-        {
-          "title": "Personal",
-          "value": "PERSONAL"
-        }
-      ],
+      "name": "apiUrl",
+      "title": "Reclaim.ai API URL",
+      "description": "Your API URL",
+      "type": "textfield",
+      "default": "https://api.app.reclaim.ai/api",
+      "placeholder": "e.g. https://api.app.reclaim.ai/api",
       "required": true
     }
   ],

@@ -1,7 +1,7 @@
 import { Action, ActionPanel, Form, Toast, popToRoot, showToast } from "@raycast/api";
 import { useState } from "react";
 import { useTask } from "./hooks/useTask";
-import { TIME_BLOCK_IN_MINUTES, formatDuration, formatStrDuration, parseDurationToMinutes } from "./utils/dates";
+import { TIME_BLOCK_IN_MINUTES, formatDuration, parseDurationToMinutes } from "./utils/dates";
 
 interface FormValues {
   title: string;
@@ -13,18 +13,36 @@ interface FormValues {
   notes: string;
 }
 
-export default (props: { timeNeeded?: string; title?: string }) => {
-  
+interface Props {
+  timeNeeded?: string;
+  title?: string;
+  interpreter?: {
+    due: Date;
+    snoozeUntil: Date;
+    durationTimeChunk: number;
+  };
+  loading?: boolean;
+}
 
-  const { timeNeeded: userTimeNeeded, title: userTitle } = props;
+export default (props: Props) => {
+  const { timeNeeded: userTimeNeeded, title: userTitle, interpreter } = props;
 
   const { createTask } = useTask();
-  const [timeNeeded, setTimeNeeded] = useState(userTimeNeeded || "");
+  const [timeNeeded, setTimeNeeded] = useState(
+    userTimeNeeded || `${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES}m` || ""
+  );
   const [timeNeededError, setTimeNeededError] = useState<string | undefined>();
-  const [durationMin, setDurationMin] = useState("");
+  const [durationMin, setDurationMin] = useState(
+    `${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES}m` || ""
+  );
   const [durationMinError, setDurationMinError] = useState<string | undefined>();
-  const [durationMax, setDurationMax] = useState("");
+  const [durationMax, setDurationMax] = useState(
+    `${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES}m` || ""
+  );
   const [durationMaxError, setDurationMaxError] = useState<string | undefined>();
+
+  const [due, setDue] = useState<Date | null>(interpreter ? interpreter.due : null);
+  const [snooze, setSnooze] = useState<Date | null>(interpreter ? interpreter.snoozeUntil : null);
 
   const handleSubmit = async (formValues: FormValues) => {
     await showToast(Toast.Style.Animated, "Creating task...");
@@ -54,6 +72,7 @@ export default (props: { timeNeeded?: string; title?: string }) => {
 
   return (
     <Form
+      isLoading={props.loading}
       actions={
         <ActionPanel>
           <Action.SubmitForm onSubmit={handleSubmit} />
@@ -113,8 +132,14 @@ export default (props: { timeNeeded?: string; title?: string }) => {
           setDurationMax(formatDuration(e.target.value));
         }}
       />
-      <Form.DatePicker type={Form.DatePicker.Type.DateTime} id="snoozeUntil" title="Starting" />
-      <Form.DatePicker type={Form.DatePicker.Type.DateTime} id="due" title="Due" />
+      <Form.DatePicker
+        value={snooze}
+        onChange={setSnooze}
+        type={Form.DatePicker.Type.DateTime}
+        id="snoozeUntil"
+        title="Starting"
+      />
+      <Form.DatePicker value={due} onChange={setDue} type={Form.DatePicker.Type.DateTime} id="due" title="Due" />
       <Form.TextArea id="notes" title="Notes" />
     </Form>
   );

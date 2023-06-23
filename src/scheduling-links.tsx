@@ -8,6 +8,7 @@ const SLActions = ({ link }: { link: SchedulingLink }) => {
   return (
     <ActionPanel>
       <Action.CopyToClipboard title="Copy Link to Clipboard" content={url} />
+      {/* <Action.Open title="Create One Off Link" target={url} /> */}
       <Action.Open title="Open in Browser" target={url} />
     </ActionPanel>
   );

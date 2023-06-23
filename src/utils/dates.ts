@@ -110,15 +110,18 @@ export const getMiniDuration = (d: Duration) => {
   });
 
   // 0h 0m
-  // if (str === "") {
-  //   return fnsFormatDuration(d, {
-  //     format: ["seconds"],
-  //   })
-  //     .replaceAll("second", "")
-  //     .replaceAll("ss", "s");
-  // }
+  if (str === "") {
+    return fnsFormatDuration(d, {
+      format: ["seconds"],
+    })
+      .replaceAll("second", "")
+      .replaceAll("ss", "s")
+      .replaceAll(" ", "");
+    // format to: Xs (seconds)
+  }
 
   const outputSplit = str.replaceAll("s", "").replaceAll("hour", "h").replaceAll("minute", "m").split(" hour");
+  // format to Xh Xm (hours and minutes)
 
   return outputSplit.map((x) => x.replaceAll(" ", "")).join(" ");
 };

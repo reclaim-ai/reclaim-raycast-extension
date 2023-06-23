@@ -1,10 +1,16 @@
-import { Action, ActionPanel, Icon, List } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { useDebounce } from "./hooks/useDebounce";
 import useInterpreter from "./hooks/useInterpreter";
+import { Plan } from "./types/plan";
+import { ListType } from "./ask-anything";
+import TaskForm from "./task-form";
 
-const FilteredAnything = ({ type, query }: { type: string; query: string }) => {
-  const [list, setList] = useState<string[]>([]);
+const FilteredAnything = ({ type, query }: { type: ListType["type"]; query: string }) => {
+  const { push } = useNavigation();
+
+  const [list, setList] = useState<{ title: string; id: string }[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [search, setSearch] = useState<string>(query);
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -17,10 +23,41 @@ const FilteredAnything = ({ type, query }: { type: string; query: string }) => {
 
   const { sendToInterpreter } = useInterpreter();
 
+  const handleAddTask = async (plan: Plan) => {
+    plan &&
+      push(
+        <TaskForm
+          title={plan.planDetails.title}
+          interpreter={{
+            due: new Date(plan.planDetails.due),
+            snoozeUntil: new Date(plan.planDetails.snoozeUntil),
+            durationTimeChunk: plan.planDetails.durationTimeChunks,
+          }}
+        />
+      );
+  };
+
+  const handleAddSchedulingLink = async (plan: Plan) => {
+    //
+    console.log("### =>", "DO PLAN WITH SCHEDULING LINK");
+  };
+
+  const handleSelection = async (id: string) => {
+    if (!plans) return;
+
+    if (type === "task") {
+      handleAddTask(plans.find((plan) => plan.id === id) as Plan);
+    }
+  };
+
   const fetchAnything = async () => {
     setLoading(true);
     const responses = await sendToInterpreter(type, search);
-    console.log("### =>", responses?.interpretedPlans[0]);
+    if (!responses) return;
+    const { interpretedPlans } = responses;
+    setPlans(interpretedPlans);
+    const _list = interpretedPlans.map((plan) => ({ title: plan.planDetails.title, id: plan.id }));
+    setList(_list);
 
     setLoading(false);
   };
@@ -44,15 +81,15 @@ const FilteredAnything = ({ type, query }: { type: string; query: string }) => {
       ) : (
         list.map((item) => (
           <List.Item
-            key={item}
-            title={item}
+            key={item.id}
+            title={item.title}
             icon={Icon.LightBulb}
             actions={
               <ActionPanel>
                 <Action
-                  title={item}
+                  title={item.id}
                   onAction={() => {
-                    //
+                    handleSelection(item.id);
                   }}
                 />
               </ActionPanel>

@@ -1,4 +1,4 @@
 export interface NativePreferences {
   apiToken: string;
-  preferredTimePolicy: "WORK" | "PERSONAL";
+  apiUrl: string;
 }

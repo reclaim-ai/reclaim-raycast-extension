@@ -1,10 +1,10 @@
-import { popToRoot, showToast, Toast, useNavigation } from "@raycast/api";
+import { popToRoot, showToast, Toast } from "@raycast/api";
 import { endOfDay } from "date-fns";
 import { useEffect } from "react";
-import { axiosPromiseData } from "./utils/axiosPromise";
-import { formatDuration, parseDurationToMinutes, TIME_BLOCK_IN_MINUTES } from "./utils/dates";
 import useApi from "./hooks/useApi";
 import TaskForm from "./task-form";
+import { axiosPromiseData } from "./utils/axiosPromise";
+import { formatDuration, parseDurationToMinutes, TIME_BLOCK_IN_MINUTES } from "./utils/dates";
 
 type Props = { arguments: { event: string; time: string } };
 
@@ -12,18 +12,10 @@ export default function Command(props: Props) {
   const { event, time } = props.arguments;
 
   const { fetcher } = useApi();
-  const { push } = useNavigation();
 
   const load = async () => {
-    const launchFullForm = ({ title, time }: { title: string; time: string }) => {
-      push(<TaskForm title={title} timeNeeded={time} />);
-    };
-
     if (!event || !time) {
-      return launchFullForm({
-        title: "",
-        time: "",
-      });
+      return;
     }
 
     const toast = await showToast({
@@ -35,14 +27,12 @@ export default function Command(props: Props) {
       if (Number(parseDurationToMinutes(time)) % 15 !== 0) {
         toast.style = Toast.Style.Failure;
         toast.title = "Time must be in a interval of 15 minutes. (15/30/45/60...)";
-        launchFullForm({ title: event, time });
         return;
       }
 
       if (time.replace(/(\s|^)\d+(\s|$)/g, "") === "") {
         toast.style = Toast.Style.Failure;
         toast.title = "Please provide a valid time (hours/min)";
-        launchFullForm({ title: event, time });
         return;
       }
 
@@ -90,5 +80,5 @@ export default function Command(props: Props) {
     void load();
   }, []);
 
-  return <TaskForm />;
+  return <TaskForm title={event} timeNeeded={time} />;
 }

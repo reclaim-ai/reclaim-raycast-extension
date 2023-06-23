@@ -1,35 +1,50 @@
-import { Action, ActionPanel, Color, Detail, Icon, List, open } from "@raycast/api";
+import { Action, ActionPanel, Color, Detail, Icon, List } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { useCalendar } from "./hooks/useCalendar";
+import { useEvent } from "./hooks/useEvent";
 import { Event } from "./types/event";
 import { eventColors } from "./utils/events";
-import { useEvent } from "./hooks/useEvent";
+import { EventActions } from "./hooks/useEvent.types";
 
-const EventActions = ({ event }: { event: Event }) => {
+const EventActionsList = ({ event }: { event: Event }) => {
+  const [eventActions, setEventActions] = useState<EventActions>([]);
+
+  const { getEventActions } = useEvent();
+
+  const loadEventActions = async () => {
+    const actions = await getEventActions(event);
+    setEventActions(actions);
+  };
+
+  useEffect(() => {
+    void loadEventActions();
+  }, []);
+
   return (
     <ActionPanel>
-      <Action
-        icon={{
-          source: "command-icon.png",
-        }}
-        title="Open in Reclaim"
-        onAction={() => {
-          open(`https://app.reclaim.ai/planner/eventId=${event.eventId}`);
-        }}
-      />
+      {eventActions.map((action) => (
+        <Action
+          key={action.title}
+          title={action.title}
+          icon={action.icon}
+          onAction={() => {
+            action.action();
+          }}
+        />
+      ))}
     </ActionPanel>
   );
 };
 
 export default function Command() {
-  const [searchText, setSearchText] = useState("");
-
   const { loading, error, eventsNow, eventsToday, eventsTomorrow, eventNext } = useCalendar();
-  const { showFormattedEventTitle, fetchEvents } = useEvent();
 
   if (error) {
     return <Detail markdown={`Error while fetching user. Please, check your API token and retry.`} />;
   }
+
+  const [searchText, setSearchText] = useState("");
+  const { showFormattedEventTitle, fetchEvents } = useEvent();
 
   useEffect(() => {
     void fetchEvents();
@@ -66,19 +81,11 @@ export default function Command() {
                   tintColor: eventColors[item.color],
                   source: Icon.Dot,
                 }}
-                //   detail={item}
                 accessories={[
-                  // { text: `An Accessory Text`, icon: Icon.Hammer },
-                  // { text: { value: `A Colored Accessory Text`, color: Color.Orange }, icon: Icon.Hammer },
-                  // { icon: Icon.Person, tooltip: "A person" },
                   { date: new Date(item.eventStart) },
-                  // { date: new Date() },
-                  // { tag: new Date() },
-                  // { tag: { value: new Date(), color: Color.Magenta } },
                   { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
-                  // { tag: { value: item.now ? "now" : "nowNot", color: Color.Blue } },
                 ]}
-                actions={<EventActions event={item} />}
+                actions={<EventActionsList event={item} />}
               />
             ))}
           </List.Section>
@@ -96,6 +103,7 @@ export default function Command() {
                 { date: new Date(eventNext.eventStart) },
                 { tag: { value: eventNext.free ? "free" : "busy", color: Color.Blue } },
               ]}
+              actions={<EventActionsList event={eventNext} />}
             />
           </List.Section>
         )}
@@ -113,6 +121,7 @@ export default function Command() {
                   { date: new Date(item.eventStart) },
                   { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
                 ]}
+                actions={<EventActionsList event={item} />}
               />
             ))}
           </List.Section>
@@ -131,6 +140,7 @@ export default function Command() {
                   { date: new Date(item.eventStart) },
                   { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
                 ]}
+                actions={<EventActionsList event={item} />}
               />
             ))}
           </List.Section>

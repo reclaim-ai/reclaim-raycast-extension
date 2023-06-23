@@ -3,7 +3,7 @@ import { useState } from "react";
 import { setTimeout } from "timers/promises";
 import { FilteredAnything } from "./filtered-anything";
 
-type ListType = {
+export type ListType = {
   title: string;
   type: "task" | "scheduling-link";
 };

@@ -1,4 +1,4 @@
-import { Cache, open } from "@raycast/api";
+import { Cache, Icon, open } from "@raycast/api";
 import { addDays, endOfDay, format, isWithinInterval } from "date-fns";
 import { useCallback, useState } from "react";
 import { Event } from "../types/event";
@@ -75,6 +75,26 @@ const useEvent = () => {
     }
   };
 
+  const handleStartHabit = async (id: string) => {
+    try {
+      const [habit, error] = await axiosPromiseData(fetcher(`/planner/start/habit/${id}`, { method: "POST" }));
+      if (!habit || error) throw error;
+      return habit;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleStopHabit = async (id: string) => {
+    try {
+      const [habit, error] = await axiosPromiseData(fetcher(`/planner/stop/habit/${id}`, { method: "POST" }));
+      if (!habit || error) throw error;
+      return habit;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   // const getOneOnOneEventActions = async (id: string) => {
   // TODO: types
   //   const [oneOnOne, error] = await axiosPromiseData<any>(fetcher(`/oneOnOne/${id}`, { method: "GET" }));
@@ -88,59 +108,89 @@ const useEvent = () => {
       start: new Date(event.eventStart),
     });
 
-    console.log("### =>", isHappening);
+    if (!event.assist) {
+      return [
+        {
+          icon: Icon.Stop,
+          title: "Open in calendar",
+          action: () => {
+            open(`https://app.reclaim.ai/planner?eventId=${event.eventId}`);
+          },
+        },
+      ];
+    }
 
     switch (event.assist.eventType) {
       case "TASK_ASSIGNMENT":
         return [
           isHappening
             ? {
+                icon: Icon.Stop,
                 title: "Stop",
                 action: async () => {
                   event.assist.taskId && (await handleStopTask(String(event.assist.taskId)));
                 },
               }
             : {
+                icon: Icon.Play,
                 title: "Start",
                 action: async () => {
                   event.assist.taskId && (await handleStartTask(String(event.assist.taskId)));
                 },
               },
-
-          // {
-          //   title: "Complete",
-          //   action: () => {
-          //     //
-          //   },
-          // },
-          // {
-          //   title: "Snooze",
-          //   action: () => {
-          //     //
-          //   },
-          // },
-          // {
-          //   title: "Delete",
-          //   action: () => {
-          //     //
-          //   },
-          // },
+          {
+            icon: Icon.Calendar,
+            title: "Open in calendar",
+            action: () => {
+              open(
+                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=task&assignmentId=${event.assist.taskId}`
+              );
+            },
+          },
         ];
       case "ONE_ON_ONE_ASSIGNMENT":
         return [
           event.onlineMeetingUrl && {
+            icon: Icon.Video,
             title: "Join Meeting",
             action: () => {
               open(event.onlineMeetingUrl);
             },
           },
+          {
+            icon: Icon.Calendar,
+            title: "Open in calendar",
+            action: () => {
+              open(
+                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=one-on-one&assignmentId=${event.assist.dailyHabitId}`
+              );
+            },
+          },
         ].filter(Boolean) as EventActions;
       case "HABIT_ASSIGNMENT":
         return [
+          isHappening
+            ? {
+                icon: Icon.Stop,
+                title: "Complete",
+                action: async () => {
+                  event.assist.dailyHabitId && (await handleStopHabit(String(event.assist.dailyHabitId)));
+                },
+              }
+            : {
+                icon: Icon.Play,
+                title: "Start",
+                action: async () => {
+                  event.assist.dailyHabitId && (await handleStartHabit(String(event.assist.dailyHabitId)));
+                },
+              },
           {
-            title: "Start",
-            action: async () => {
-              //
+            icon: Icon.Calendar,
+            title: "Open in calendar",
+            action: () => {
+              open(
+                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=habit&assignmentId=${event.assist.dailyHabitId}`
+              );
             },
           },
         ];
