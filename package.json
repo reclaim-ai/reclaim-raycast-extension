@@ -20,21 +20,30 @@
       "default": "",
       "placeholder": "e.g. 1234567890-ABCDEFG-1234567890",
       "required": true
+    },
+    {
+      "name": "apiUrl",
+      "title": "Reclaim.ai API URL",
+      "description": "Your API URL",
+      "type": "textfield",
+      "default": "https://api.app.reclaim.ai/api",
+      "placeholder": "e.g. https://api.app.reclaim.ai/api",
+      "required": true
     }
   ],
   "commands": [
     {
       "name": "notifications",
       "title": "Reclaim Notifications",
-      "description": "Show unread notifications in the Menu Bar.",
+      "description": "Show notifications in the Menu Bar.",
       "mode": "menu-bar",
       "subtitle": "Reclaim",
       "icon": "command-icon.png",
-      "interval": "5m"
+      "interval": "1m"
     },
     {
       "name": "quick-task",
-      "title": "Quick Task",
+      "title": "Create task",
       "description": "",
       "mode": "view",
       "arguments": [
@@ -43,20 +52,32 @@
           "name": "event",
           "title": "event",
           "placeholder": "Task",
-          "required": true
+          "required": false
         },
         {
           "type": "text",
           "name": "time",
           "title": "time",
           "placeholder": "Time needed",
-          "required": true
+          "required": false
         }
       ]
     },
     {
-      "name": "list-events",
+      "name": "my-calendar",
       "title": "My Calendar",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "scheduling-links",
+      "title": "View Scheduling Links",
+      "description": "",
+      "mode": "view"
+    },
+    {
+      "name": "ask-anything",
+      "title": "Ask Anything",
       "description": "",
       "mode": "view"
     }

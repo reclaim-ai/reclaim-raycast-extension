@@ -1,78 +1,84 @@
-import { Action, ActionPanel, Icon, List, Toast, showToast } from "@raycast/api";
-import { useEffect, useState } from "react";
+import { popToRoot, showToast, Toast } from "@raycast/api";
+import { endOfDay } from "date-fns";
+import { useEffect } from "react";
 import useApi from "./hooks/useApi";
-import { ApiResponseInterpreter } from "./hooks/useApi.types";
+import TaskForm from "./task-form";
+import { axiosPromiseData } from "./utils/axiosPromise";
+import { formatDuration, parseDurationToMinutes, TIME_BLOCK_IN_MINUTES } from "./utils/dates";
 
-export default (props: { arguments: { event: string; time: string } }) => {
+type Props = { arguments: { event: string; time: string } };
+
+export default function Command(props: Props) {
   const { event, time } = props.arguments;
-  const { sendToInterpreter } = useApi();
 
-  const [loading, setLoading] = useState(true);
-  const [response, setResponse] = useState<undefined | ApiResponseInterpreter>();
+  const { fetcher } = useApi();
 
-  useEffect(() => {
-    (async () => {
-      await showToast({
-        style: Toast.Style.Animated,
-        title: "Processing information...",
-      });
+  const load = async () => {
+    if (!event || !time) {
+      return;
+    }
 
-      const rawData = await sendToInterpreter("task", `Create task ${event} ${time}`);
-      setResponse(rawData?.data);
-      setLoading(false);
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Creating task...",
+    });
 
-      await showToast({
-        style: Toast.Style.Success,
-        title: "Loaded!",
-        message: "message loaded",
-        primaryAction: {
-          title: "Test action",
-          onAction: (toast) => {
-            console.log("The toast action has been triggered");
-            toast.hide();
-          },
-        },
-      });
-    })();
-  }, []);
+    try {
+      if (Number(parseDurationToMinutes(time)) % 15 !== 0) {
+        toast.style = Toast.Style.Failure;
+        toast.title = "Time must be in a interval of 15 minutes. (15/30/45/60...)";
+        return;
+      }
 
-  const handleCreateTask = (planUuid: string) => {
-    console.log("create task");
+      if (time.replace(/(\s|^)\d+(\s|$)/g, "") === "") {
+        toast.style = Toast.Style.Failure;
+        toast.title = "Please provide a valid time (hours/min)";
+        return;
+      }
+
+      const durationBlock = Number(parseDurationToMinutes(formatDuration(time))) / TIME_BLOCK_IN_MINUTES;
+
+      const data = {
+        title: event,
+        eventCategory: "WORK",
+        timeChunksRequired: durationBlock,
+        snoozeUntil: new Date().toJSON(),
+        due: endOfDay(new Date()).toJSON(),
+        minChunkSize: durationBlock,
+        maxChunkSize: durationBlock,
+        alwaysPrivate: true,
+      };
+
+      console.log("### => [POST] /tasks", data);
+
+      const [task, error] = await axiosPromiseData(
+        fetcher("/tasks", {
+          method: "POST",
+          data,
+        })
+      );
+
+      console.log("### => [RESPONSE] /tasks", task);
+
+      if (!task && error) throw error;
+
+      toast.style = Toast.Style.Success;
+      toast.title = "Task created!";
+      popToRoot();
+    } catch (err) {
+      console.error(err);
+
+      toast.style = Toast.Style.Failure;
+      toast.title = "Failed to create task";
+      if (err instanceof Error) {
+        toast.message = err.message;
+      }
+    }
   };
 
-  return (
-    <List
-      isLoading={loading}
-      // searchText={searchText}
-      // onSearchTextChange={setSearchText}
-      // navigationTitle="Select option"
-      searchBarPlaceholder="Select Option"
-    >
-      {response &&
-        response.interpretedPlans.map((item) => (
-          <List.Item
-            key={item.uuid}
-            title={item.description}
-            // icon={Icon.Circle}
-            //   detail={item}
-            // accessories={[
-            //   // { text: `An Accessory Text`, icon: Icon.Hammer },
-            //   // { text: { value: `A Colored Accessory Text`, color: Color.Orange }, icon: Icon.Hammer },
-            //   // { icon: Icon.Person, tooltip: "A person" },
-            //   { date: new Date(item.eventStart) },
-            //   // { date: new Date() },
-            //   // { tag: new Date() },
-            //   // { tag: { value: new Date(), color: Color.Magenta } },
-            //   { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
-            // ]}
-            actions={
-              <ActionPanel>
-                <Action icon={Icon.Check} title="Create Task" onAction={() => handleCreateTask(item.uuid)} />
-                <Action icon={Icon.Multiply} title="Never Mind" />
-              </ActionPanel>
-            }
-          />
-        ))}
-    </List>
-  );
-};
+  useEffect(() => {
+    void load();
+  }, []);
+
+  return <TaskForm title={event} timeNeeded={time} />;
+}

@@ -1,82 +1,167 @@
 //
 
-import { Icon, LaunchType, MenuBarExtra, launchCommand, open } from "@raycast/api";
+import { Cache, Icon, LaunchType, MenuBarExtra, launchCommand, open } from "@raycast/api";
+import { useCalendar } from "./hooks/useCalendar";
+import { eventColors } from "./utils/events";
+import { parseEmojiField } from "./utils/string";
+
+import { intervalToDuration } from "date-fns";
+import { useEffect, useState } from "react";
+import { useEvent } from "./hooks/useEvent";
+import { Event } from "./types/event";
+import { getMiniDuration } from "./utils/dates";
+
+const cache = new Cache();
+
+const ActionOptionsWithContext = ({ event }: { event: Event }) => {
+  const { getEventActions } = useEvent();
+
+  const [actions, setActions] = useState<{ title: string; action: () => void }[]>([]);
+
+  const loadActions = async () => {
+    setActions(await getEventActions(event));
+  };
+
+  useEffect(() => {
+    void loadActions();
+  }, []);
+
+  return (
+    <>
+      {actions.map((action) => (
+        <MenuBarExtra.Item
+          key={action.title}
+          title={action.title}
+          // shortcut={{ modifiers: ["cmd"], key: "enter" }}
+          // icon={{ source: Icon.Dot }}
+          onAction={action.action}
+        />
+      ))}
+    </>
+  );
+};
 
 export default function Command() {
+  const { loading, eventsNow, eventNext, eventsToday, eventsTomorrow } = useCalendar();
+  const { showFormattedEventTitle } = useEvent();
+  const cachedTitle = cache.get("menuBarTitle");
+
+  const [menuBarTitle, setMenuBarTitle] = useState(cachedTitle ? cachedTitle : "No upcoming events");
+
   const handleOpenReclaim = () => {
     open("https://app.reclaim.ai");
   };
 
   const handleOpenRaycast = async () => {
-    await launchCommand({ name: "list-events", type: LaunchType.UserInitiated });
+    await launchCommand({ name: "my-calendar", type: LaunchType.UserInitiated });
   };
 
+  useEffect(() => {
+    // no events at all. (next or now)
+    if (!eventsNow.length && !eventNext) {
+      cache.set("menuBarTitle", "No upcoming events");
+      setMenuBarTitle("No upcoming events");
+      return;
+    }
+
+    // has events going on now.
+    if (eventsNow && eventsNow.length > 0) {
+      const duration = intervalToDuration({
+        start: new Date(),
+        end: new Date(eventsNow[0].eventEnd),
+      });
+      const text = `Ends in ${getMiniDuration(duration)}: ${parseEmojiField(eventsNow[0].title).textWithoutEmoji}`;
+
+      cache.set("menuBarTitle", text);
+      setMenuBarTitle(text);
+      return;
+    }
+
+    // has next event.
+    if (!!eventsNow && eventNext) {
+      const duration = intervalToDuration({
+        start: new Date(),
+        end: new Date(eventNext.eventStart),
+      });
+      const text = `Starts in ${getMiniDuration(duration)}: ${parseEmojiField(eventNext.title).textWithoutEmoji}`;
+
+      cache.set("menuBarTitle", text);
+      setMenuBarTitle(text);
+      return;
+    }
+  }, [eventsNow, eventNext]);
+
   return (
-    <MenuBarExtra
-      icon={"command-icon.png"}
-      // title="Upcoming in 15 min: Talk w/ Henry"
-      tooltip="Reclaim.ai"
-    >
-      <MenuBarExtra.Section title="Ending in 30 min" />
-      <MenuBarExtra.Item
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#FF0000",
-        }}
-        title="Some event"
-        onAction={handleOpenReclaim}
-      />
-      <MenuBarExtra.Section title="Next" />
-      <MenuBarExtra.Item
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#00FF00",
-        }}
-        title="Next event 1"
-        onAction={handleOpenReclaim}
-      />
-      <MenuBarExtra.Item
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#FFFF00",
-        }}
-        title="Next event 2"
-        onAction={handleOpenReclaim}
-      />
-      <MenuBarExtra.Section title="Tomorrow" />
-      <MenuBarExtra.Item
-        icon={{
-          source: Icon.Dot,
-          tintColor: "#2f2f2f",
-        }}
-        title="Tomorrow event"
-        onAction={handleOpenReclaim}
-      />
+    <MenuBarExtra isLoading={loading} icon={"command-icon.png"} title={menuBarTitle}>
+      {!!eventsNow && eventsNow.length > 0 && (
+        <>
+          <MenuBarExtra.Section title="Now" />
+          {eventsNow.map((event) => (
+            <MenuBarExtra.Submenu
+              key={event.eventId}
+              icon={{
+                source: Icon.Dot,
+                tintColor: eventColors[event.color],
+              }}
+              title={showFormattedEventTitle(event, true)}
+            >
+              <ActionOptionsWithContext event={event} />
+            </MenuBarExtra.Submenu>
+          ))}
+        </>
+      )}
+      {!!eventNext && (
+        <>
+          <MenuBarExtra.Section title="Next" />
+          <MenuBarExtra.Submenu
+            icon={{
+              source: Icon.Dot,
+              tintColor: eventColors[eventNext.color],
+            }}
+            title={showFormattedEventTitle(eventNext, true)}
+          >
+            <ActionOptionsWithContext event={eventNext} />
+          </MenuBarExtra.Submenu>
+        </>
+      )}
+      {!!eventsToday && eventsToday.length > 0 && (
+        <>
+          <MenuBarExtra.Section title="Today" />
+          {eventsToday.map((event) => (
+            <MenuBarExtra.Submenu
+              key={event.eventId}
+              icon={{
+                source: Icon.Dot,
+                tintColor: eventColors[event.color],
+              }}
+              title={showFormattedEventTitle(event, true)}
+            >
+              <ActionOptionsWithContext event={event} />
+            </MenuBarExtra.Submenu>
+          ))}
+        </>
+      )}
+      {!!eventsTomorrow && eventsTomorrow.length > 0 && (
+        <>
+          <MenuBarExtra.Section title="Tomorrow" />
+          {eventsTomorrow.map((event) => (
+            <MenuBarExtra.Submenu
+              key={event.eventId}
+              icon={{
+                source: Icon.Dot,
+                tintColor: eventColors[event.color],
+              }}
+              title={showFormattedEventTitle(event, true)}
+            >
+              <ActionOptionsWithContext event={event} />
+            </MenuBarExtra.Submenu>
+          ))}
+        </>
+      )}
+
       <MenuBarExtra.Separator />
       <MenuBarExtra.Item title="Open Reclaim" onAction={handleOpenReclaim} />
       <MenuBarExtra.Item title="Open Raycast" onAction={handleOpenRaycast} />
-      {/* <MenuBarExtra.Item title="Current meeting"  />
-      <MenuBarExtra.Item
-        title="Join videoconference"
-        onAction={() => {
-          console.log("seen pull request clicked");
-        }}
-      />
-
-      <MenuBarExtra.Item title="----------" />
-      <MenuBarExtra.Item
-        title="Some important meeting."
-        onAction={() => {
-          console.log("seen pull request clicked");
-        }}
-      />
-      <MenuBarExtra.Item title="Current task" />
-      <MenuBarExtra.Item
-        title="some task here?"
-        onAction={() => {
-          console.log("unseen pull request clicked");
-        }}
-      /> */}
     </MenuBarExtra>
   );
 }
