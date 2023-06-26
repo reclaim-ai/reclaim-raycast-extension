@@ -1,6 +1,6 @@
 import { axiosPromiseData } from "../utils/axiosPromise";
 import reclaimApi from "./useApi";
-import { ApiSchedulingLink } from "./useSchedulingLink.types";
+import { ApiSchedulingLink, ApiSchedulingLinkGroups } from "./useSchedulingLink.types";
 
 const useSchedulingLinks = () => {
   const { fetcher } = reclaimApi();
@@ -19,8 +19,23 @@ const useSchedulingLinks = () => {
     }
   };
 
+  const getSchedulingLinksGroups = async () => {
+    try {
+      const [schedulingLinksGroups, error] = await axiosPromiseData<ApiSchedulingLinkGroups>(
+        fetcher("/scheduling-link/group", {
+          method: "GET",
+        })
+      );
+      if (!schedulingLinksGroups || error) throw error;
+      return schedulingLinksGroups;
+    } catch (error) {
+      console.error("SL GROUP ERROR:", error);
+    }
+  };
+
   return {
     getSchedulingLinks,
+    getSchedulingLinksGroups,
   };
 };
 
