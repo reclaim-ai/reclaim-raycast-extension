@@ -109,3 +109,11 @@ export interface Permissions {
   canEnable: boolean;
   canDelete: boolean;
 }
+
+export interface SchedulingLinkGroup {
+  id: string;
+  name: string;
+  slug: string;
+  linkIds: string[];
+  main: boolean;
+}
