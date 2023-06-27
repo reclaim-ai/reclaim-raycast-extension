@@ -5,6 +5,7 @@ import { useEvent } from "./hooks/useEvent";
 import { Event } from "./types/event";
 import { eventColors } from "./utils/events";
 import { EventActions } from "./hooks/useEvent.types";
+import { addDays } from "date-fns";
 
 const EventActionsList = ({ event }: { event: Event }) => {
   const [eventActions, setEventActions] = useState<EventActions>([]);
@@ -37,7 +38,7 @@ const EventActionsList = ({ event }: { event: Event }) => {
 };
 
 export default function Command() {
-  const { loading, error, eventsNow, eventsToday, eventsTomorrow, eventNext } = useCalendar();
+  const { loading, error, eventsNow, eventsToday, eventsTomorrow, eventNext, eventsOther } = useCalendar();
 
   if (error) {
     return <Detail markdown={`Error while fetching user. Please, check your API token and retry.`} />;
@@ -47,7 +48,10 @@ export default function Command() {
   const { showFormattedEventTitle, fetchEvents } = useEvent();
 
   useEffect(() => {
-    void fetchEvents();
+    void fetchEvents({
+      start: new Date(),
+      end: addDays(new Date(), 7),
+    });
   }, []);
 
   return (
@@ -129,6 +133,25 @@ export default function Command() {
         {!!eventsTomorrow.length && (
           <List.Section title="Tomorrow">
             {eventsTomorrow.map((item) => (
+              <List.Item
+                key={item.eventId}
+                title={showFormattedEventTitle(item)}
+                icon={{
+                  tintColor: eventColors[item.color],
+                  source: Icon.Dot,
+                }}
+                accessories={[
+                  { date: new Date(item.eventStart) },
+                  { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
+                ]}
+                actions={<EventActionsList event={item} />}
+              />
+            ))}
+          </List.Section>
+        )}
+        {!!eventsOther.length && (
+          <List.Section title="Following days">
+            {eventsOther.map((item) => (
               <List.Item
                 key={item.eventId}
                 title={showFormattedEventTitle(item)}

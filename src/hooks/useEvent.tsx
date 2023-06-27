@@ -1,6 +1,6 @@
-import { Cache, Icon, open } from "@raycast/api";
-import { addDays, endOfDay, format, isWithinInterval } from "date-fns";
-import { useCallback, useState } from "react";
+import { Icon, open } from "@raycast/api";
+import { format, isWithinInterval } from "date-fns";
+import { useCallback } from "react";
 import { Event } from "../types/event";
 import { axiosPromiseData } from "../utils/axiosPromise";
 import { formatDisplayEventHours, formatDisplayHours } from "../utils/dates";
@@ -9,31 +9,27 @@ import reclaimApi from "./useApi";
 import { ApiResponseEvents, EventActions } from "./useEvent.types";
 import { useUser } from "./useUser";
 
-const cache = new Cache();
-
 const useEvent = () => {
   const { fetcher } = reclaimApi();
   const { currentUser } = useUser();
 
-  const cached = cache.get("events");
-
-  const [events, setEvents] = useState<Event[]>(cached ? JSON.parse(cached) : []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = async ({ start, end }: { start: Date; end: Date }) => {
     try {
-      const start = format(new Date(), "yyyy-MM-dd");
-      const end = format(endOfDay(addDays(new Date(), 2)), "yyyy-MM-dd");
+      const strStart = format(start, "yyyy-MM-dd");
+      const strEnd = format(end, "yyyy-MM-dd");
 
-      const [fetchEvents, error] = await axiosPromiseData<ApiResponseEvents>(
-        fetcher("/events", {
+      const [eventsResponse, error] = await axiosPromiseData<ApiResponseEvents>(
+        fetcher("/events?sourceDetails=true", {
           method: "GET",
-          params: { start, end },
+          params: {
+            start: strStart,
+            end: strEnd,
+          },
         })
       );
 
-      if (!fetchEvents || error) throw error;
-      setEvents(fetchEvents);
-      cache.set("events", JSON.stringify(fetchEvents));
+      if (!eventsResponse || error) throw error;
+      return eventsResponse;
     } catch (error) {
       console.error(error);
     }
@@ -201,7 +197,6 @@ const useEvent = () => {
 
   return {
     fetchEvents,
-    events,
     getEventActions,
     showFormattedEventTitle,
   };

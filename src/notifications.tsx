@@ -1,13 +1,12 @@
-//
-
 import { Cache, Icon, LaunchType, MenuBarExtra, launchCommand, open } from "@raycast/api";
-import { useCalendar } from "./hooks/useCalendar";
 import { eventColors } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
 
 import { intervalToDuration } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useEvent } from "./hooks/useEvent";
+import { EventAction } from "./hooks/useEvent.types";
+import { useShortCalendar } from "./hooks/useShortCalendar";
 import { Event } from "./types/event";
 import { getMiniDuration } from "./utils/dates";
 
@@ -16,7 +15,7 @@ const cache = new Cache();
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
 
-  const [actions, setActions] = useState<{ title: string; action: () => void }[]>([]);
+  const [actions, setActions] = useState<EventAction[]>([]);
 
   const loadActions = async () => {
     setActions(await getEventActions(event));
@@ -29,24 +28,32 @@ const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   return (
     <>
       {actions.map((action) => (
-        <MenuBarExtra.Item
-          key={action.title}
-          title={action.title}
-          // shortcut={{ modifiers: ["cmd"], key: "enter" }}
-          // icon={{ source: Icon.Dot }}
-          onAction={action.action}
-        />
+        <MenuBarExtra.Item key={action.title} title={action.title} onAction={action.action} />
       ))}
     </>
   );
 };
 
 export default function Command() {
-  const { loading, eventsNow, eventNext, eventsToday, eventsTomorrow } = useCalendar();
+  console.log("### =>", "src/notifications.tsx: Command()");
+
+  const { loading, parsedEvents } = useShortCalendar();
   const { showFormattedEventTitle } = useEvent();
   const cachedTitle = cache.get("menuBarTitle");
 
   const [menuBarTitle, setMenuBarTitle] = useState(cachedTitle ? cachedTitle : "No upcoming events");
+
+  const eventsNow = useMemo(() => parsedEvents.filter((event) => event.section === "NOW"), [parsedEvents]);
+
+  const [eventNext, ...eventsToday] = useMemo(
+    () => parsedEvents.filter((event) => event.section === "TODAY").slice(0, 6),
+    [parsedEvents]
+  );
+
+  const eventsTomorrow = useMemo(
+    () => parsedEvents.filter((event) => event.section === "TOMORROW").slice(0, 3),
+    [parsedEvents]
+  );
 
   const handleOpenReclaim = () => {
     open("https://app.reclaim.ai");
@@ -58,7 +65,7 @@ export default function Command() {
 
   useEffect(() => {
     // no events at all. (next or now)
-    if (!eventsNow.length && !eventNext) {
+    if (parsedEvents.length === 0) {
       cache.set("menuBarTitle", "No upcoming events");
       setMenuBarTitle("No upcoming events");
       return;
@@ -66,11 +73,12 @@ export default function Command() {
 
     // has events going on now.
     if (eventsNow && eventsNow.length > 0) {
-      const duration = intervalToDuration({
-        start: new Date(),
-        end: new Date(eventsNow[0].eventEnd),
-      });
-      const text = `Ends in ${getMiniDuration(duration)}: ${parseEmojiField(eventsNow[0].title).textWithoutEmoji}`;
+      // const duration = intervalToDuration({
+      //   start: new Date(),
+      //   end: new Date(eventsNow[0].eventEnd),
+      // });
+      // const text = `Ends in ${getMiniDuration(duration)}: ${parseEmojiField(eventsNow[0].title).textWithoutEmoji}`;
+      const text = `Now: ${parseEmojiField(eventsNow[0].title).textWithoutEmoji}`;
 
       cache.set("menuBarTitle", text);
       setMenuBarTitle(text);
