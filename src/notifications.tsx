@@ -10,8 +10,7 @@ import { sortEvents } from "./utils/arrays";
 import { eventColors } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
 
-type EventSections = "NOW" | "TODAY" | "TOMORROW" | "OTHER";
-type EventSection = { section: EventSections; sectionTitle: string; events: Event[] };
+type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
