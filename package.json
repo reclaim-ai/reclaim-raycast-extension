@@ -43,9 +43,9 @@
     },
     {
       "name": "quick-task",
-      "title": "Create task",
+      "title": "Quick Task",
       "description": "",
-      "mode": "view",
+      "mode": "no-view",
       "arguments": [
         {
           "type": "text",
@@ -70,6 +70,12 @@
       "mode": "view"
     },
     {
+      "name": "create-task",
+      "title": "Create Task",
+      "description": "",
+      "mode": "view"
+    },
+    {
       "name": "scheduling-links",
       "title": "View Scheduling Links",
       "description": "",
@@ -84,6 +90,7 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.52.1",
+    "@raycast/utils": "^1.8.0",
     "axios": "^1.4.0",
     "date-fns": "^2.30.0"
   },
