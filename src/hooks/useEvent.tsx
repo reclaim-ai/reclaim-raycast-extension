@@ -98,7 +98,7 @@ const useEvent = () => {
   //   return oneOnOne;
   // };
 
-  const getEventActions = useCallback(async (event: Event): Promise<EventActions> => {
+  const getEventActions = useCallback((event: Event): EventActions => {
     const isHappening = isWithinInterval(new Date(), {
       end: new Date(event.eventEnd),
       start: new Date(event.eventStart),

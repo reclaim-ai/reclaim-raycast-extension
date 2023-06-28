@@ -1,23 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { sortEvents } from "../utils/arrays";
 import { useEvent } from "./useEvent";
-import { useUser } from "./useUser";
+
 import { addDays } from "date-fns";
 import { Event } from "../types/event";
 
 const useCalendar = () => {
-  const { currentUser: user, isLoading: isLoadingUser } = useUser();
-
   const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { fetchEvents } = useEvent();
 
   const loadEvents = async () => {
-    const queryEvents = await fetchEvents({
-      start: new Date(),
-      end: addDays(new Date(), 7),
-    });
-    setEvents(queryEvents || []);
+    try {
+      setIsLoading(true);
+      const queryEvents = await fetchEvents({
+        start: new Date(),
+        end: addDays(new Date(), 7),
+      });
+      setEvents(queryEvents || []);
+    } catch (error) {
+      console.error("Error when fetching events", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const parsedEvents = useMemo(() => {
@@ -60,8 +66,7 @@ const useCalendar = () => {
   }, []);
 
   return {
-    loading: isLoadingUser,
-    error: !isLoadingUser && !user,
+    loading: isLoading,
     events,
     eventsNow,
     eventNext,

@@ -11,8 +11,6 @@ const cache = new Cache();
 type ShortCalendarEvent = Event & { section: "NOW" | "TOMORROW" | "TODAY" | "OTHER" };
 
 const useShortCalendar = () => {
-  console.log("### =>", "src/hooks/useShortCalendar.tsx");
-
   const { currentUser: user, isLoading: isLoadingUser } = useUser();
   const [events, setEvents] = useState<Event[]>([]);
 

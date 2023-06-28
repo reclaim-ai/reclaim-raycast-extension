@@ -38,11 +38,7 @@ const EventActionsList = ({ event }: { event: Event }) => {
 };
 
 export default function Command() {
-  const { loading, error, eventsNow, eventsToday, eventsTomorrow, eventNext, eventsOther } = useCalendar();
-
-  if (error) {
-    return <Detail markdown={`Error while fetching user. Please, check your API token and retry.`} />;
-  }
+  const { loading, eventsNow, eventsToday, eventsTomorrow, eventNext, eventsOther } = useCalendar();
 
   const [searchText, setSearchText] = useState("");
   const { showFormattedEventTitle, fetchEvents } = useEvent();
@@ -62,17 +58,6 @@ export default function Command() {
       onSearchTextChange={setSearchText}
       navigationTitle="Search events"
       searchBarPlaceholder="Search your event"
-      // searchBarAccessory={
-      //   <List.Dropdown
-      //     tooltip="Select Todo List"
-      //     value={"All"}
-      //     //   onChange={(newValue) => setState((previous) => ({ ...previous, filter: newValue as Filter }))}
-      //   >
-      //     <List.Dropdown.Item title="All" value={"All"} />
-      //     <List.Dropdown.Item title="Open" value={"Open"} />
-      //     <List.Dropdown.Item title="Completed" value={"Completed"} />
-      //   </List.Dropdown>
-      // }
     >
       <>
         {!!eventsNow.length && (
