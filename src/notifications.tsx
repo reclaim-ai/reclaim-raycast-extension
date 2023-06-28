@@ -1,167 +1,156 @@
-//
-
-import { Cache, Icon, LaunchType, MenuBarExtra, launchCommand, open } from "@raycast/api";
-import { useCalendar } from "./hooks/useCalendar";
+import { Icon, MenuBarExtra, getPreferenceValues } from "@raycast/api";
+import { useFetch } from "@raycast/utils";
+import { addDays, addMinutes, endOfDay, format, formatDistance, isAfter, isWithinInterval, startOfDay } from "date-fns";
+import { useMemo } from "react";
+import { useEvent } from "./hooks/useEvent";
+import { ApiResponseEvents } from "./hooks/useEvent.types";
+import { Event } from "./types/event";
+import { NativePreferences } from "./types/preferences";
+import { sortEvents } from "./utils/arrays";
 import { eventColors } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
 
-import { intervalToDuration } from "date-fns";
-import { useEffect, useState } from "react";
-import { useEvent } from "./hooks/useEvent";
-import { Event } from "./types/event";
-import { getMiniDuration } from "./utils/dates";
-
-const cache = new Cache();
+type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
 
-  const [actions, setActions] = useState<{ title: string; action: () => void }[]>([]);
+  return (
+    <>
+      {getEventActions(event).map((action) => (
+        <MenuBarExtra.Item key={action.title} title={action.title} onAction={action.action} />
+      ))}
+    </>
+  );
+};
 
-  const loadActions = async () => {
-    setActions(await getEventActions(event));
-  };
-
-  useEffect(() => {
-    void loadActions();
-  }, []);
+const EventsSection = ({ events, sectionTitle }: { events: Event[]; sectionTitle: string }) => {
+  const { showFormattedEventTitle } = useEvent();
 
   return (
     <>
-      {actions.map((action) => (
-        <MenuBarExtra.Item
-          key={action.title}
-          title={action.title}
-          // shortcut={{ modifiers: ["cmd"], key: "enter" }}
-          // icon={{ source: Icon.Dot }}
-          onAction={action.action}
-        />
+      <MenuBarExtra.Section title={sectionTitle} />
+      {events.map((event) => (
+        <MenuBarExtra.Submenu
+          key={event.eventId}
+          icon={{
+            source: Icon.Dot,
+            tintColor: eventColors[event.color],
+          }}
+          title={showFormattedEventTitle(event, true)}
+        >
+          <ActionOptionsWithContext event={event} />
+        </MenuBarExtra.Submenu>
       ))}
     </>
   );
 };
 
 export default function Command() {
-  const { loading, eventsNow, eventNext, eventsToday, eventsTomorrow } = useCalendar();
-  const { showFormattedEventTitle } = useEvent();
-  const cachedTitle = cache.get("menuBarTitle");
+  const { apiToken, apiUrl } = getPreferenceValues<NativePreferences>();
 
-  const [menuBarTitle, setMenuBarTitle] = useState(cachedTitle ? cachedTitle : "No upcoming events");
-
-  const handleOpenReclaim = () => {
-    open("https://app.reclaim.ai");
+  const fetchHeaders = {
+    Authorization: `Bearer ${apiToken}`,
+    "Content-Type": "application/json",
+    Accept: "application/json",
   };
 
-  const handleOpenRaycast = async () => {
-    await launchCommand({ name: "my-calendar", type: LaunchType.UserInitiated });
+  const range = {
+    start: format(startOfDay(new Date()), "yyyy-MM-dd"),
+    end: format(addDays(new Date(), 2), "yyyy-MM-dd"),
   };
 
-  useEffect(() => {
-    // no events at all. (next or now)
-    if (!eventsNow.length && !eventNext) {
-      cache.set("menuBarTitle", "No upcoming events");
-      setMenuBarTitle("No upcoming events");
-      return;
+  const { data, isLoading } = useFetch<ApiResponseEvents>(
+    `${apiUrl}/events?sourceDetails=true&start=${range.start}&end=${range.end}`,
+    {
+      headers: fetchHeaders,
+      keepPreviousData: true,
+    }
+  );
+
+  const events = useMemo<EventSection[]>(() => {
+    if (!data) return [];
+
+    const now = new Date();
+    const today = startOfDay(now);
+    const tomorrow = startOfDay(addDays(now, 1));
+
+    const events: EventSection[] = [
+      {
+        section: "NOW",
+        sectionTitle: "Now",
+        events: data.filter((event) => {
+          const start = new Date(event.eventStart);
+          const end = new Date(event.eventEnd);
+          return isWithinInterval(now, { start, end });
+        }),
+      },
+      {
+        section: "TODAY",
+        sectionTitle: "Today",
+        events: data.filter((event) => {
+          const start = new Date(event.eventStart);
+          // const end = new Date(event.eventEnd);
+          return isWithinInterval(start, { start: today, end: endOfDay(today) });
+        }),
+      },
+      {
+        section: "TOMORROW",
+        sectionTitle: "Tomorrow",
+        events: data.filter((event) => {
+          const start = new Date(event.eventStart);
+          // const end = new Date(event.eventEnd);
+          return isWithinInterval(start, { start: tomorrow, end: endOfDay(tomorrow) });
+        }),
+      },
+    ];
+
+    return events.filter((event) => event.events.length > 0);
+  }, [data]);
+
+  const title = useMemo(() => {
+    const notEndedEvents = data
+      ?.filter((event) => {
+        const end = new Date(event.eventEnd);
+        return isAfter(end, new Date());
+      })
+      .sort(sortEvents);
+
+    if (!notEndedEvents?.length) return "No events today";
+
+    const hasEventsNow = notEndedEvents.some((event) => {
+      const start = new Date(event.eventStart);
+      const end = addMinutes(new Date(event.eventStart), 3);
+      return isWithinInterval(new Date(), { start, end });
+    });
+
+    if (hasEventsNow) {
+      const evNow = notEndedEvents[0];
+      return `Now: ${parseEmojiField(evNow.title).textWithoutEmoji}`;
     }
 
-    // has events going on now.
-    if (eventsNow && eventsNow.length > 0) {
-      const duration = intervalToDuration({
-        start: new Date(),
-        end: new Date(eventsNow[0].eventEnd),
-      });
-      const text = `Ends in ${getMiniDuration(duration)}: ${parseEmojiField(eventsNow[0].title).textWithoutEmoji}`;
+    const nextEvents = notEndedEvents
+      .filter((event) => {
+        const start = new Date(event.eventStart);
+        return isAfter(start, new Date());
+      })
+      .sort(sortEvents);
 
-      cache.set("menuBarTitle", text);
-      setMenuBarTitle(text);
-      return;
-    }
-
-    // has next event.
-    if (!!eventsNow && eventNext) {
-      const duration = intervalToDuration({
-        start: new Date(),
-        end: new Date(eventNext.eventStart),
-      });
-      const text = `Starts in ${getMiniDuration(duration)}: ${parseEmojiField(eventNext.title).textWithoutEmoji}`;
-
-      cache.set("menuBarTitle", text);
-      setMenuBarTitle(text);
-      return;
-    }
-  }, [eventsNow, eventNext]);
+    return `Next: ${parseEmojiField(nextEvents[0].title).textWithoutEmoji} in ${formatDistance(
+      new Date(),
+      new Date(nextEvents[0].eventStart)
+    )}`;
+  }, [data]);
 
   return (
-    <MenuBarExtra isLoading={loading} icon={"command-icon.png"} title={menuBarTitle}>
-      {!!eventsNow && eventsNow.length > 0 && (
-        <>
-          <MenuBarExtra.Section title="Now" />
-          {eventsNow.map((event) => (
-            <MenuBarExtra.Submenu
-              key={event.eventId}
-              icon={{
-                source: Icon.Dot,
-                tintColor: eventColors[event.color],
-              }}
-              title={showFormattedEventTitle(event, true)}
-            >
-              <ActionOptionsWithContext event={event} />
-            </MenuBarExtra.Submenu>
-          ))}
-        </>
-      )}
-      {!!eventNext && (
-        <>
-          <MenuBarExtra.Section title="Next" />
-          <MenuBarExtra.Submenu
-            icon={{
-              source: Icon.Dot,
-              tintColor: eventColors[eventNext.color],
-            }}
-            title={showFormattedEventTitle(eventNext, true)}
-          >
-            <ActionOptionsWithContext event={eventNext} />
-          </MenuBarExtra.Submenu>
-        </>
-      )}
-      {!!eventsToday && eventsToday.length > 0 && (
-        <>
-          <MenuBarExtra.Section title="Today" />
-          {eventsToday.map((event) => (
-            <MenuBarExtra.Submenu
-              key={event.eventId}
-              icon={{
-                source: Icon.Dot,
-                tintColor: eventColors[event.color],
-              }}
-              title={showFormattedEventTitle(event, true)}
-            >
-              <ActionOptionsWithContext event={event} />
-            </MenuBarExtra.Submenu>
-          ))}
-        </>
-      )}
-      {!!eventsTomorrow && eventsTomorrow.length > 0 && (
-        <>
-          <MenuBarExtra.Section title="Tomorrow" />
-          {eventsTomorrow.map((event) => (
-            <MenuBarExtra.Submenu
-              key={event.eventId}
-              icon={{
-                source: Icon.Dot,
-                tintColor: eventColors[event.color],
-              }}
-              title={showFormattedEventTitle(event, true)}
-            >
-              <ActionOptionsWithContext event={event} />
-            </MenuBarExtra.Submenu>
-          ))}
-        </>
-      )}
-
-      <MenuBarExtra.Separator />
-      <MenuBarExtra.Item title="Open Reclaim" onAction={handleOpenReclaim} />
-      <MenuBarExtra.Item title="Open Raycast" onAction={handleOpenRaycast} />
+    <MenuBarExtra isLoading={isLoading} icon={"command-icon.png"} title={title}>
+      {events.map((eventSection) => (
+        <EventsSection
+          key={eventSection.section}
+          events={eventSection.events}
+          sectionTitle={eventSection.sectionTitle}
+        />
+      ))}
     </MenuBarExtra>
   );
 }

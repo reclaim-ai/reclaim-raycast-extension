@@ -1,10 +1,12 @@
-import { Action, ActionPanel, Color, Detail, Icon, List } from "@raycast/api";
-import { useEffect, useState } from "react";
-import { useCalendar } from "./hooks/useCalendar";
+import { Action, ActionPanel, Color, Icon, List } from "@raycast/api";
+import { addDays, endOfDay, isAfter, isBefore, isWithinInterval, startOfDay } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
 import { useEvent } from "./hooks/useEvent";
+import { EventActions } from "./hooks/useEvent.types";
 import { Event } from "./types/event";
 import { eventColors } from "./utils/events";
-import { EventActions } from "./hooks/useEvent.types";
+
+type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
 const EventActionsList = ({ event }: { event: Event }) => {
   const [eventActions, setEventActions] = useState<EventActions>([]);
@@ -36,116 +38,115 @@ const EventActionsList = ({ event }: { event: Event }) => {
   );
 };
 
+const ListSection = ({ events, sectionTitle }: { sectionTitle: string; events: Event[] }) => {
+  const { showFormattedEventTitle } = useEvent();
+
+  return (
+    <List.Section title={sectionTitle}>
+      {events.map((item) => (
+        <List.Item
+          key={item.eventId}
+          title={showFormattedEventTitle(item)}
+          icon={{
+            tintColor: eventColors[item.color],
+            source: Icon.Dot,
+          }}
+          accessories={[
+            { date: new Date(item.eventStart) },
+            { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
+          ]}
+          actions={<EventActionsList event={item} />}
+        />
+      ))}
+    </List.Section>
+  );
+};
+
 export default function Command() {
-  const { loading, error, eventsNow, eventsToday, eventsTomorrow, eventNext } = useCalendar();
-
-  if (error) {
-    return <Detail markdown={`Error while fetching user. Please, check your API token and retry.`} />;
-  }
-
   const [searchText, setSearchText] = useState("");
-  const { showFormattedEventTitle, fetchEvents } = useEvent();
+  const [eventsData, setEventsData] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { fetchEvents } = useEvent();
+
+  const events = useMemo<EventSection[]>(() => {
+    if (!eventsData) return [];
+
+    const now = new Date();
+    const today = startOfDay(now);
+    const tomorrow = startOfDay(addDays(now, 1));
+
+    const events: EventSection[] = [
+      {
+        section: "NOW",
+        sectionTitle: "Now",
+        events: eventsData.filter((event) => {
+          const start = new Date(event.eventStart);
+          const end = new Date(event.eventEnd);
+          return isWithinInterval(now, { start, end });
+        }),
+      },
+      {
+        section: "TODAY",
+        sectionTitle: "Today",
+        events: eventsData.filter((event) => {
+          const start = new Date(event.eventStart);
+          return isAfter(start, now) && isBefore(start, endOfDay(now));
+        }),
+      },
+      {
+        section: "EARLIER_TODAY",
+        sectionTitle: "Earlier today",
+        events: eventsData.filter((event) => {
+          const end = new Date(event.eventEnd);
+          const start = new Date(event.eventStart);
+          return isAfter(start, today) && isBefore(end, now);
+        }),
+      },
+      {
+        section: "TOMORROW",
+        sectionTitle: "Tomorrow",
+        events: eventsData.filter((event) => {
+          const start = new Date(event.eventStart);
+          return isWithinInterval(start, { start: tomorrow, end: endOfDay(tomorrow) });
+        }),
+      },
+    ];
+
+    return events.filter((event) => event.events.length > 0);
+  }, [eventsData]);
 
   useEffect(() => {
-    void fetchEvents();
+    const loadEvents = async () => {
+      try {
+        setIsLoading(true);
+        const events = await fetchEvents({
+          start: startOfDay(new Date()),
+          end: addDays(new Date(), 7),
+        });
+        setEventsData(events || []);
+      } catch (error) {
+        console.error("Error loading events", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadEvents();
   }, []);
 
   return (
     <List
       filtering={true}
-      isLoading={loading}
+      isLoading={isLoading}
       searchText={searchText}
       onSearchTextChange={setSearchText}
       navigationTitle="Search events"
       searchBarPlaceholder="Search your event"
-      // searchBarAccessory={
-      //   <List.Dropdown
-      //     tooltip="Select Todo List"
-      //     value={"All"}
-      //     //   onChange={(newValue) => setState((previous) => ({ ...previous, filter: newValue as Filter }))}
-      //   >
-      //     <List.Dropdown.Item title="All" value={"All"} />
-      //     <List.Dropdown.Item title="Open" value={"Open"} />
-      //     <List.Dropdown.Item title="Completed" value={"Completed"} />
-      //   </List.Dropdown>
-      // }
     >
-      <>
-        {!!eventsNow.length && (
-          <List.Section title="Now">
-            {eventsNow.map((item) => (
-              <List.Item
-                key={item.eventId}
-                title={showFormattedEventTitle(item)}
-                icon={{
-                  tintColor: eventColors[item.color],
-                  source: Icon.Dot,
-                }}
-                accessories={[
-                  { date: new Date(item.eventStart) },
-                  { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
-                ]}
-                actions={<EventActionsList event={item} />}
-              />
-            ))}
-          </List.Section>
-        )}
-        {!!eventNext && (
-          <List.Section title="Next">
-            <List.Item
-              key={eventNext.eventId}
-              title={showFormattedEventTitle(eventNext)}
-              icon={{
-                tintColor: eventColors[eventNext.color],
-                source: Icon.Dot,
-              }}
-              accessories={[
-                { date: new Date(eventNext.eventStart) },
-                { tag: { value: eventNext.free ? "free" : "busy", color: Color.Blue } },
-              ]}
-              actions={<EventActionsList event={eventNext} />}
-            />
-          </List.Section>
-        )}
-        {!!eventsToday.length && (
-          <List.Section title="Today">
-            {eventsToday.map((item) => (
-              <List.Item
-                key={item.eventId}
-                title={showFormattedEventTitle(item)}
-                icon={{
-                  tintColor: eventColors[item.color],
-                  source: Icon.Dot,
-                }}
-                accessories={[
-                  { date: new Date(item.eventStart) },
-                  { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
-                ]}
-                actions={<EventActionsList event={item} />}
-              />
-            ))}
-          </List.Section>
-        )}
-        {!!eventsTomorrow.length && (
-          <List.Section title="Tomorrow">
-            {eventsTomorrow.map((item) => (
-              <List.Item
-                key={item.eventId}
-                title={showFormattedEventTitle(item)}
-                icon={{
-                  tintColor: eventColors[item.color],
-                  source: Icon.Dot,
-                }}
-                accessories={[
-                  { date: new Date(item.eventStart) },
-                  { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
-                ]}
-                actions={<EventActionsList event={item} />}
-              />
-            ))}
-          </List.Section>
-        )}
-      </>
+      {events.map((section) => (
+        <ListSection key={section.section} sectionTitle={section.sectionTitle} events={section.events} />
+      ))}
     </List>
   );
 }
