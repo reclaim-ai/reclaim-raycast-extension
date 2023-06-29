@@ -33,7 +33,7 @@ const useEvent = () => {
       if (!eventsResponse || error) throw error;
       return eventsResponse;
     } catch (error) {
-      console.error(error);
+      console.error("Error while fetching events", error);
     }
   };
 
@@ -61,7 +61,7 @@ const useEvent = () => {
       if (!habit || error) throw error;
       return habit;
     } catch (error) {
-      console.error(error);
+      console.error("Error while starting habit", error);
     }
   };
 
@@ -71,7 +71,7 @@ const useEvent = () => {
       if (!habit || error) throw error;
       return habit;
     } catch (error) {
-      console.error(error);
+      console.error("Error while stopping habit", error);
     }
   };
 
@@ -81,95 +81,97 @@ const useEvent = () => {
       start: new Date(event.eventStart),
     });
 
-    if (!event.assist) {
-      return [
-        {
-          icon: Icon.Stop,
+    const eventActions: EventActions = [];
+
+    if (event.onlineMeetingUrl) {
+      eventActions.push({
+        icon: Icon.Camera,
+        title: "Join meeting",
+        action: () => {
+          open(event.onlineMeetingUrl);
+        },
+      });
+    }
+
+    switch (event.assist?.eventType) {
+      case "TASK_ASSIGNMENT":
+        isHappening
+          ? eventActions.push({
+              icon: Icon.Stop,
+              title: "Stop",
+              action: async () => {
+                event.assist?.taskId && (await handleStopTask(String(event.assist.taskId)));
+              },
+            })
+          : eventActions.push({
+              icon: Icon.Play,
+              title: "Start",
+              action: async () => {
+                event.assist?.taskId && (await handleStartTask(String(event.assist.taskId)));
+              },
+            });
+        eventActions.push({
+          icon: Icon.Calendar,
+          title: "Open in calendar",
+          action: () => {
+            open(
+              `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=task&assignmentId=${event.assist?.taskId}`
+            );
+          },
+        });
+        break;
+      case "ONE_ON_ONE_ASSIGNMENT":
+        eventActions.push({
+          icon: Icon.Calendar,
+          title: "Open in calendar",
+          action: () => {
+            open(
+              `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=one-on-one&assignmentId=${event.assist?.dailyHabitId}`
+            );
+          },
+        });
+        break;
+      case "HABIT_ASSIGNMENT":
+        isHappening
+          ? eventActions.push({
+              icon: Icon.Stop,
+              title: "Complete",
+              action: async () => {
+                event.assist?.dailyHabitId && (await handleStopHabit(String(event.assist?.dailyHabitId)));
+              },
+            })
+          : eventActions.push({
+              icon: Icon.Play,
+              title: "Start",
+              action: async () => {
+                event.assist?.dailyHabitId && (await handleStartHabit(String(event.assist?.dailyHabitId)));
+              },
+            });
+
+        eventActions.push({
+          icon: Icon.Calendar,
+          title: "Open in calendar",
+          action: () => {
+            open(
+              `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=habit&assignmentId=${event.assist?.dailyHabitId}`
+            );
+          },
+        });
+
+        break;
+
+      default:
+        eventActions.push({
+          icon: Icon.Calendar,
           title: "Open in calendar",
           action: () => {
             open(`https://app.reclaim.ai/planner?eventId=${event.eventId}`);
           },
-        },
-      ];
+        });
+        break;
     }
 
-    switch (event.assist.eventType) {
-      case "TASK_ASSIGNMENT":
-        return [
-          isHappening
-            ? {
-                icon: Icon.Stop,
-                title: "Stop",
-                action: async () => {
-                  event.assist?.taskId && (await handleStopTask(String(event.assist.taskId)));
-                },
-              }
-            : {
-                icon: Icon.Play,
-                title: "Start",
-                action: async () => {
-                  event.assist?.taskId && (await handleStartTask(String(event.assist.taskId)));
-                },
-              },
-          {
-            icon: Icon.Calendar,
-            title: "Open in calendar",
-            action: () => {
-              open(
-                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=task&assignmentId=${event.assist?.taskId}`
-              );
-            },
-          },
-        ];
-      case "ONE_ON_ONE_ASSIGNMENT":
-        return [
-          event.onlineMeetingUrl && {
-            icon: Icon.Video,
-            title: "Join Meeting",
-            action: () => {
-              open(event.onlineMeetingUrl);
-            },
-          },
-          {
-            icon: Icon.Calendar,
-            title: "Open in calendar",
-            action: () => {
-              open(
-                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=one-on-one&assignmentId=${event.assist?.dailyHabitId}`
-              );
-            },
-          },
-        ].filter(Boolean) as EventActions;
-      case "HABIT_ASSIGNMENT":
-        return [
-          isHappening
-            ? {
-                icon: Icon.Stop,
-                title: "Complete",
-                action: async () => {
-                  event.assist?.dailyHabitId && (await handleStopHabit(String(event.assist?.dailyHabitId)));
-                },
-              }
-            : {
-                icon: Icon.Play,
-                title: "Start",
-                action: async () => {
-                  event.assist?.dailyHabitId && (await handleStartHabit(String(event.assist?.dailyHabitId)));
-                },
-              },
-          {
-            icon: Icon.Calendar,
-            title: "Open in calendar",
-            action: () => {
-              open(
-                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=habit&assignmentId=${event.assist?.dailyHabitId}`
-              );
-            },
-          },
-        ];
-      default:
-        return [];
-    }
+    return eventActions;
   }, []);
 
   return {

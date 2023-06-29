@@ -89,10 +89,10 @@ export default function Command() {
       },
       {
         section: "TODAY",
-        sectionTitle: "Today",
+        sectionTitle: "Upcoming events",
         events: data
           .filter((event) => {
-            return event.type !== "LOGISTICS";
+            return event.assist?.eventType !== "CONF_BUFFER";
           })
           .filter((event) => {
             const start = new Date(event.eventStart);
