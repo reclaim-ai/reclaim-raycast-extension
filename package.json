@@ -70,6 +70,12 @@
       "mode": "view"
     },
     {
+      "name": "tasks",
+      "title": "My Tasks",
+      "description": "",
+      "mode": "view"
+    },
+    {
       "name": "create-task",
       "title": "Create Task",
       "description": "",

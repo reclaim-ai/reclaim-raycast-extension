@@ -1,20 +1,15 @@
-import { getPreferenceValues } from "@raycast/api";
-import { NativePreferences } from "../types/preferences";
 import { axiosPromiseData } from "../utils/axiosPromise";
 import reclaimApi from "./useApi";
-import { CreateTaskProps } from "./useTask.types";
+import { ApiResponseTasks, CreateTaskProps } from "./useTask.types";
 
 const useTask = () => {
   const { fetcher } = reclaimApi();
-  const { preferredTimePolicy } = getPreferenceValues<NativePreferences>();
-
-  // const { currentUser } = useUser();
 
   const createTask = async (task: CreateTaskProps) => {
     try {
       const data = {
         title: task.title,
-        eventCategory: preferredTimePolicy || "WORK",
+        eventCategory: "WORK",
         timeChunksRequired: task.timeNeeded,
         snoozeUntil: task.snoozeUntil,
         due: task.due,
@@ -40,36 +35,41 @@ const useTask = () => {
     }
   };
 
-  // const createQuickTask = async ({ title, durationBlock }: { title: string; durationBlock: number }) => {
-  //   try {
-  //     const [task, error] = await axiosPromiseData(
-  //       fetcher("/tasks", {
-  //         method: "POST",
-  //         data: {
-  //           title: title,
-  //           // eventColor: "",
-  //           eventCategory: preferredTimePolicy,
-  //           timeChunksRequired: durationBlock,
-  //           snoozeUntil: new Date().toJSON(),
-  //           due: endOfDay(new Date()).toJSON(),
-  //           minChunkSize: durationBlock,
-  //           maxChunkSize: durationBlock,
-  //           // notes: "",
-  //           // priority: "",
-  //           alwaysPrivate: true,
-  //         },
-  //       })
-  //     );
-  //     if (!task && error) throw error;
-  //     return task;
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
+  const handleStartTask = async (id: string) => {
+    try {
+      const [task, error] = await axiosPromiseData(fetcher(`/planner/start/task/${id}`, { method: "POST" }));
+      if (!task || error) throw error;
+      return task;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleStopTask = async (id: string) => {
+    try {
+      const [task, error] = await axiosPromiseData(fetcher(`/planner/stop/task/${id}`, { method: "POST" }));
+      if (!task || error) throw error;
+      return task;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchTasks = async () => {
+    try {
+      const [tasks, error] = await axiosPromiseData<ApiResponseTasks>(fetcher("/tasks"));
+      if (!tasks && error) throw error;
+      return tasks;
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return {
-    // createQuickTask,
     createTask,
+    fetchTasks,
+    handleStartTask,
+    handleStopTask,
   };
 };
 

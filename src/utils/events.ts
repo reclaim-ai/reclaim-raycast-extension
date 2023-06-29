@@ -12,3 +12,12 @@ export const eventColors = {
   BASIL: "#0E753B",
   TOMATO: "#CF0003",
 } as const;
+
+export const truncateEventSize = (eventTitle: string) => {
+  const TRUNCATE_LENGTH = 18;
+
+  if (eventTitle.length > TRUNCATE_LENGTH) {
+    return `${eventTitle.substring(0, TRUNCATE_LENGTH)}...`;
+  }
+  return eventTitle;
+}

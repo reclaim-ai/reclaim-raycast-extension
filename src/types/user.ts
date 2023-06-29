@@ -29,6 +29,160 @@ export interface User {
   startOfWeek: string;
   primaryCalendarId: string;
   sku: string;
+  features: UserFeatures;
+}
+
+export interface UserFeatures {
+  scheduler: number;
+  extraScopes: boolean;
+  assistSettings: {
+    bypassed: boolean;
+    travel: boolean;
+    otherTravelDuration: number;
+    conferenceBuffer: boolean;
+    conferenceBufferType: string;
+    conferenceBufferDuration: number;
+    conferenceBufferPrivate: boolean;
+    customConferenceBufferTitle: string;
+    assignmentPaddingDuration: number;
+    focus: boolean;
+    allOneOnOnesBusy: boolean;
+    autoLockForMeetings: string;
+    autoLockForNonMeetings: string;
+  };
+  openAISettings: {
+    enabled: boolean;
+  };
+  slackSettings: {
+    enabled: boolean;
+    personalSyncNotifyNew: boolean;
+    personalSyncNotifyUpdated: boolean;
+    personalSyncNotifyDeleted: boolean;
+    personalSyncNotificationsIncludingSelf: boolean;
+    habitNotifyUpcoming: boolean;
+    taskNotifyUpcoming: boolean;
+    travelNotify: boolean;
+    outsideHoursMigrated: boolean;
+    statusSync: string;
+    outSideHours: {
+      policy: string;
+      dnd: boolean;
+    };
+    privateStatus: {
+      template: string;
+    };
+
+    statusEnabled: boolean;
+  };
+  taskSettings: {
+    enabled: boolean;
+    googleTasks: boolean;
+    defaults: {
+      timeChunksRequired: number;
+      commsTimeChunksRequired: number;
+      delayedStartInMinutes: number;
+      dueInDays: number;
+      category: string;
+      alwaysPrivate: boolean;
+      minChunkSize: number;
+      maxChunkSize: number;
+    };
+    autoWorkflowSettings: {
+      category: string;
+    };
+  };
+  priorities: {
+    enabled: boolean;
+  };
+  colors: {
+    enabled: boolean;
+    projectsEnabled: boolean;
+    prioritiesEnabled: boolean;
+    categoriesEnabled: boolean;
+    lastModified: string;
+    // priorities: {
+    //   "0": string;
+    // };
+    categories: {
+      WORK: string;
+      MEETING: string;
+      EXTERNAL: string;
+      PERSONAL: string;
+      LOGISTICS: string;
+      ONE_ON_ONE: string;
+    };
+  };
+  calendar: {
+    enabled: boolean;
+  };
+  focus: {
+    enabled: boolean;
+  };
+  asana: {
+    enabled: boolean;
+  };
+  billing: {
+    enabled: boolean;
+  };
+  projects: {
+    enabled: boolean;
+  };
+  sync: {
+    enabled: boolean;
+  };
+  appNotifications: {
+    enabled: boolean;
+    unscheduledPriority: boolean;
+  };
+  googleAddOnSettings: {
+    enabled: boolean;
+  };
+  interests: {
+    tasks: boolean;
+    priorities: boolean;
+    office365: boolean;
+    calendar: boolean;
+    asana: boolean;
+    trello: boolean;
+    todoist: boolean;
+    jira: boolean;
+    linear: boolean;
+    clickup: boolean;
+    monday: boolean;
+  };
+  // onboard: {
+  //   habits: boolean;
+  //   tasks: boolean;
+  //   googleTasks: boolean;
+  //   planItemPrioritized: boolean;
+  //   smartOneOnOnes: boolean;
+  //   bufferTime: boolean;
+  //   tasksReindex: boolean;
+  //   googleAddOn: boolean;
+  //   schedulingLinks: boolean;
+  // };
+  weeklyReport: {
+    enabled: boolean;
+    sendReport: boolean;
+  };
+  smartOneOnOnes: {
+    enabled: boolean;
+  };
+  schedulingLinks: {
+    enabled: boolean;
+    note: string;
+    remindersMigrated: boolean;
+  };
+  eventStorage: {
+    enabled: boolean;
+    writeMode: string;
+    readMode: string;
+    backfilled: boolean;
+  };
+  availableMeetingTimes: Array<number>;
+  quests: {
+    enabled: boolean;
+  };
 }
 
 export interface UserSettings {

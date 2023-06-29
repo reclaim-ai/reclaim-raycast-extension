@@ -104,26 +104,8 @@ export const formatDuration = (e: string | undefined) => {
   return formatStrDuration(e);
 };
 
-export const getMiniDuration = (d: Duration) => {
-  const str = fnsFormatDuration(d, {
-    format: ["hours", "minutes"],
-  });
-
-  // 0h 0m
-  if (str === "") {
-    return fnsFormatDuration(d, {
-      format: ["seconds"],
-    })
-      .replaceAll("second", "")
-      .replaceAll("ss", "s")
-      .replaceAll(" ", "");
-    // format to: Xs (seconds)
-  }
-
-  const outputSplit = str.replaceAll("s", "").replaceAll("hour", "h").replaceAll("minute", "m").split(" hour");
-  // format to Xh Xm (hours and minutes)
-
-  return outputSplit.map((x) => x.replaceAll(" ", "")).join(" ");
+export const miniDuration = (d: string) => {
+  return d.replace(" hours", "h").replace(" hour", "h").replace(" minutes", "m").replace(" minute", "m");
 };
 
 export const TIME_BLOCK_IN_MINUTES = 15;
