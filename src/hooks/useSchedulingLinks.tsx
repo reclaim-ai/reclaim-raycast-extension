@@ -15,7 +15,7 @@ const useSchedulingLinks = () => {
       if (!schedulingLinks || error) throw error;
       return schedulingLinks;
     } catch (error) {
-      console.error("SL ERROR:", error);
+      console.error("Error while fetching scheduling links", error);
     }
   };
 
@@ -29,7 +29,7 @@ const useSchedulingLinks = () => {
       if (!schedulingLinksGroups || error) throw error;
       return schedulingLinksGroups;
     } catch (error) {
-      console.error("SL GROUP ERROR:", error);
+      console.error("Error while fetching scheduling links groups", error);
     }
   };
 

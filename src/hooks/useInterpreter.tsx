@@ -25,7 +25,7 @@ const useInterpreter = () => {
       console.log("### => [RESPONSE] interpreter", response.interpretedPlans);
       return response;
     } catch (error) {
-      console.error(error);
+      console.error("Error while sending message to interpreter", error);
     }
   };
 
@@ -37,7 +37,7 @@ const useInterpreter = () => {
       });
       return { statusCode: rawRequest.status };
     } catch (error) {
-      console.error(error);
+      console.error("Error while confirming interpreter message", error);
     }
   };
 

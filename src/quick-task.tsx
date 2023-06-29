@@ -60,7 +60,7 @@ export default async function Command(props: Props) {
     toast.title = "Task created!";
     popToRoot();
   } catch (err) {
-    console.error(err);
+    console.error("Error while creating task", err);
 
     toast.style = Toast.Style.Failure;
     toast.title = "Failed to create task";

@@ -31,7 +31,7 @@ const useTask = () => {
       console.log("### => [POST] /tasks", createdTask);
       return createdTask;
     } catch (error) {
-      console.error(error);
+      console.error("Error while creating task", error);
     }
   };
 
@@ -41,7 +41,7 @@ const useTask = () => {
       if (!task || error) throw error;
       return task;
     } catch (error) {
-      console.error(error);
+      console.error("Error while starting task", error);
     }
   };
 
@@ -51,7 +51,7 @@ const useTask = () => {
       if (!task || error) throw error;
       return task;
     } catch (error) {
-      console.error(error);
+      console.error("Error while stopping task", error);
     }
   };
 
@@ -61,7 +61,7 @@ const useTask = () => {
       if (!tasks && error) throw error;
       return tasks;
     } catch (error) {
-      console.error(error);
+      console.error("Error while fetching tasks", error);
     }
   };
 

@@ -37,11 +37,6 @@ const FilteredAnything = ({ type, query }: { type: ListType["type"]; query: stri
       );
   };
 
-  const handleAddSchedulingLink = async (plan: Plan) => {
-    //
-    console.log("### =>", "DO PLAN WITH SCHEDULING LINK");
-  };
-
   const handleSelection = async (id: string) => {
     if (!plans) return;
 

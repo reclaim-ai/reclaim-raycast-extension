@@ -38,7 +38,7 @@ const useUser = () => {
       cache.set("user", JSON.stringify(user));
       cache.set("userDate", JSON.stringify(new Date().toISOString()));
     } catch (error) {
-      console.error(error);
+      console.error("Error while fetching user", error);
     } finally {
       setIsLoading(false);
     }
