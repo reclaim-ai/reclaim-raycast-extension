@@ -1,4 +1,4 @@
-import { Icon, MenuBarExtra, getPreferenceValues } from "@raycast/api";
+import { Icon, LaunchType, MenuBarExtra, getPreferenceValues, launchCommand, open } from "@raycast/api";
 import { useFetch } from "@raycast/utils";
 import { addDays, addMinutes, endOfDay, format, formatDistance, isAfter, isWithinInterval, startOfDay } from "date-fns";
 import { useMemo } from "react";
@@ -7,10 +7,13 @@ import { ApiResponseEvents } from "./hooks/useEvent.types";
 import { Event } from "./types/event";
 import { NativePreferences } from "./types/preferences";
 import { sortEvents } from "./utils/arrays";
-import { eventColors } from "./utils/events";
+import { eventColors, truncateEventSize } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
+import { miniDuration } from "./utils/dates";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
+
+const GRACE_PERIOD = 3;
 
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
@@ -73,7 +76,6 @@ export default function Command() {
 
     const now = new Date();
     const today = startOfDay(now);
-    const tomorrow = startOfDay(addDays(now, 1));
 
     const events: EventSection[] = [
       {
@@ -88,25 +90,28 @@ export default function Command() {
       {
         section: "TODAY",
         sectionTitle: "Today",
-        events: data.filter((event) => {
-          const start = new Date(event.eventStart);
-          // const end = new Date(event.eventEnd);
-          return isWithinInterval(start, { start: today, end: endOfDay(today) });
-        }),
-      },
-      {
-        section: "TOMORROW",
-        sectionTitle: "Tomorrow",
-        events: data.filter((event) => {
-          const start = new Date(event.eventStart);
-          // const end = new Date(event.eventEnd);
-          return isWithinInterval(start, { start: tomorrow, end: endOfDay(tomorrow) });
-        }),
+        events: data
+          .filter((event) => {
+            return event.type !== "LOGISTICS";
+          })
+          .filter((event) => {
+            const start = new Date(event.eventStart);
+            return isWithinInterval(start, { start: now, end: endOfDay(today) });
+          })
+          .slice(0, 5),
       },
     ];
 
     return events.filter((event) => event.events.length > 0);
   }, [data]);
+
+  const handleOpenReclaim = () => {
+    open("https://app.reclaim.ai");
+  };
+
+  const handleOpenRaycast = async () => {
+    await launchCommand({ name: "my-calendar", type: LaunchType.UserInitiated });
+  };
 
   const title = useMemo(() => {
     const notEndedEvents = data
@@ -116,17 +121,18 @@ export default function Command() {
       })
       .sort(sortEvents);
 
-    if (!notEndedEvents?.length) return "No events today";
+    if (!notEndedEvents?.length) return "No upcoming events";
 
-    const hasEventsNow = notEndedEvents.some((event) => {
+    const hasEventsNow = notEndedEvents.filter((event) => {
       const start = new Date(event.eventStart);
-      const end = addMinutes(new Date(event.eventStart), 3);
+      const end = addMinutes(new Date(event.eventStart), GRACE_PERIOD);
       return isWithinInterval(new Date(), { start, end });
     });
 
-    if (hasEventsNow) {
-      const evNow = notEndedEvents[0];
-      return `Now: ${parseEmojiField(evNow.title).textWithoutEmoji}`;
+    if (hasEventsNow.length > 0) {
+      const evNow = hasEventsNow[hasEventsNow.length - 1];
+      const realEventTitle = evNow.sourceDetails?.title || evNow.title;
+      return `Now: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)}`;
     }
 
     const nextEvents = notEndedEvents
@@ -134,16 +140,25 @@ export default function Command() {
         const start = new Date(event.eventStart);
         return isAfter(start, new Date());
       })
+      .filter((event) => {
+        const start = new Date(event.eventStart);
+        const end = new Date(event.eventEnd);
+        return !isWithinInterval(new Date(), { start, end });
+      })
       .sort(sortEvents);
 
-    return `Next: ${parseEmojiField(nextEvents[0].title).textWithoutEmoji} in ${formatDistance(
-      new Date(),
-      new Date(nextEvents[0].eventStart)
+    const evNext = nextEvents[0];
+    const realEventTitle = evNext.sourceDetails?.title || evNext.title;
+
+    return `Next: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)} ${miniDuration(
+      formatDistance(new Date(nextEvents[0].eventStart), new Date(), {
+        addSuffix: true,
+      })
     )}`;
   }, [data]);
 
   return (
-    <MenuBarExtra isLoading={isLoading} icon={"command-icon.png"} title={title}>
+    <MenuBarExtra isLoading={isLoading} icon={"command-icon.png"} title={title} tooltip="test">
       {events.map((eventSection) => (
         <EventsSection
           key={eventSection.section}
@@ -151,6 +166,9 @@ export default function Command() {
           sectionTitle={eventSection.sectionTitle}
         />
       ))}
+      <MenuBarExtra.Separator />
+      <MenuBarExtra.Item title="Open Reclaim" onAction={handleOpenReclaim} />
+      <MenuBarExtra.Item title="Open Raycast" onAction={handleOpenRaycast} />
     </MenuBarExtra>
   );
 }

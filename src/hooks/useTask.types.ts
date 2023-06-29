@@ -1,3 +1,5 @@
+import { Task } from "../types/task";
+
 export interface CreateTaskProps {
   title: string;
   timeNeeded: number;
@@ -7,3 +9,5 @@ export interface CreateTaskProps {
   due: Date;
   notes: string;
 }
+
+export type ApiResponseTasks = Task[];

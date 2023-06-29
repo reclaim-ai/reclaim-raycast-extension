@@ -85,7 +85,17 @@ export interface AssistDetails {
 
 export interface Event {
   allocatedTimeChunks: number;
-  assist: AssistDetails;
+  assist?: AssistDetails;
+  sourceDetails?: {
+    calendarId: number;
+    eventId: string;
+    etag: string;
+    writable: boolean;
+    eventKey: string;
+    base64Id: string;
+    url: string;
+    title: string;
+  };
   calendarId: number;
   category: string;
   color:

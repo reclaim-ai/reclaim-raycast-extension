@@ -8,10 +8,12 @@ import { parseEmojiField } from "../utils/string";
 import reclaimApi from "./useApi";
 import { ApiResponseEvents, EventActions } from "./useEvent.types";
 import { useUser } from "./useUser";
+import { useTask } from "./useTask";
 
 const useEvent = () => {
   const { fetcher } = reclaimApi();
   const { currentUser } = useUser();
+  const { handleStartTask, handleStopTask } = useTask();
 
   const fetchEvents = async ({ start, end }: { start: Date; end: Date }) => {
     try {
@@ -46,30 +48,12 @@ const useEvent = () => {
             end: new Date(event.eventEnd),
             hoursFormat: meridianFormat,
           });
-      return `${hours}  ${parseEmojiField(event.title).textWithoutEmoji}`;
+
+      const realEventTitle = event.sourceDetails?.title || event.title;
+      return `${hours}  ${parseEmojiField(realEventTitle).textWithoutEmoji}`;
     },
     [currentUser]
   );
-
-  const handleStartTask = async (id: string) => {
-    try {
-      const [task, error] = await axiosPromiseData(fetcher(`/planner/start/task/${id}`, { method: "POST" }));
-      if (!task || error) throw error;
-      return task;
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleStopTask = async (id: string) => {
-    try {
-      const [task, error] = await axiosPromiseData(fetcher(`/planner/stop/task/${id}`, { method: "POST" }));
-      if (!task || error) throw error;
-      return task;
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const handleStartHabit = async (id: string) => {
     try {
@@ -90,13 +74,6 @@ const useEvent = () => {
       console.error(error);
     }
   };
-
-  // const getOneOnOneEventActions = async (id: string) => {
-  // TODO: types
-  //   const [oneOnOne, error] = await axiosPromiseData<any>(fetcher(`/oneOnOne/${id}`, { method: "GET" }));
-  //   if (!oneOnOne || error) throw error;
-  //   return oneOnOne;
-  // };
 
   const getEventActions = useCallback((event: Event): EventActions => {
     const isHappening = isWithinInterval(new Date(), {
@@ -124,14 +101,14 @@ const useEvent = () => {
                 icon: Icon.Stop,
                 title: "Stop",
                 action: async () => {
-                  event.assist.taskId && (await handleStopTask(String(event.assist.taskId)));
+                  event.assist?.taskId && (await handleStopTask(String(event.assist.taskId)));
                 },
               }
             : {
                 icon: Icon.Play,
                 title: "Start",
                 action: async () => {
-                  event.assist.taskId && (await handleStartTask(String(event.assist.taskId)));
+                  event.assist?.taskId && (await handleStartTask(String(event.assist.taskId)));
                 },
               },
           {
@@ -139,7 +116,7 @@ const useEvent = () => {
             title: "Open in calendar",
             action: () => {
               open(
-                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=task&assignmentId=${event.assist.taskId}`
+                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=task&assignmentId=${event.assist?.taskId}`
               );
             },
           },
@@ -158,7 +135,7 @@ const useEvent = () => {
             title: "Open in calendar",
             action: () => {
               open(
-                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=one-on-one&assignmentId=${event.assist.dailyHabitId}`
+                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=one-on-one&assignmentId=${event.assist?.dailyHabitId}`
               );
             },
           },
@@ -170,14 +147,14 @@ const useEvent = () => {
                 icon: Icon.Stop,
                 title: "Complete",
                 action: async () => {
-                  event.assist.dailyHabitId && (await handleStopHabit(String(event.assist.dailyHabitId)));
+                  event.assist?.dailyHabitId && (await handleStopHabit(String(event.assist?.dailyHabitId)));
                 },
               }
             : {
                 icon: Icon.Play,
                 title: "Start",
                 action: async () => {
-                  event.assist.dailyHabitId && (await handleStartHabit(String(event.assist.dailyHabitId)));
+                  event.assist?.dailyHabitId && (await handleStartHabit(String(event.assist?.dailyHabitId)));
                 },
               },
           {
@@ -185,7 +162,7 @@ const useEvent = () => {
             title: "Open in calendar",
             action: () => {
               open(
-                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=habit&assignmentId=${event.assist.dailyHabitId}`
+                `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=habit&assignmentId=${event.assist?.dailyHabitId}`
               );
             },
           },
