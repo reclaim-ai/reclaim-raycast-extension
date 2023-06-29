@@ -50,7 +50,9 @@ const EventsSection = ({ events, sectionTitle }: { events: Event[]; sectionTitle
 };
 
 export default function Command() {
-  const { apiToken, apiUrl } = getPreferenceValues<NativePreferences>();
+  const { apiToken, apiUrl, upcomingEventsCount } = getPreferenceValues<NativePreferences>();
+
+  const NUMBER_OF_EVENTS = Number(upcomingEventsCount) || 5;
 
   const fetchHeaders = {
     Authorization: `Bearer ${apiToken}`,
@@ -98,7 +100,7 @@ export default function Command() {
             const start = new Date(event.eventStart);
             return isWithinInterval(start, { start: now, end: endOfDay(today) });
           })
-          .slice(0, 5),
+          .slice(0, NUMBER_OF_EVENTS),
       },
     ];
 

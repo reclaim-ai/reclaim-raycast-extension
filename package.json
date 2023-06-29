@@ -29,6 +29,15 @@
       "default": "https://api.app.reclaim.ai/api",
       "placeholder": "e.g. https://api.app.reclaim.ai/api",
       "required": true
+    },
+    {
+      "name": "upcomingEventsCount",
+      "title": "Number of Upcoming Events",
+      "description": "The ammount of upcoming events that we will show on your Menubar.",
+      "type": "textfield",
+      "default": "5",
+      "placeholder": "eg: 5, 10, 12, 42..",
+      "required": false
     }
   ],
   "commands": [

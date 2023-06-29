@@ -1,4 +1,4 @@
-import { Icon, open } from "@raycast/api";
+import { Icon, getPreferenceValues, open } from "@raycast/api";
 import { format, isWithinInterval } from "date-fns";
 import { useCallback } from "react";
 import { Event } from "../types/event";
@@ -9,11 +9,13 @@ import reclaimApi from "./useApi";
 import { ApiResponseEvents, EventActions } from "./useEvent.types";
 import { useUser } from "./useUser";
 import { useTask } from "./useTask";
+import { NativePreferences } from "../types/preferences";
 
 const useEvent = () => {
   const { fetcher } = reclaimApi();
   const { currentUser } = useUser();
   const { handleStartTask, handleStopTask } = useTask();
+  const { apiUrl } = getPreferenceValues<NativePreferences>();
 
   const fetchEvents = async ({ start, end }: { start: Date; end: Date }) => {
     try {
@@ -112,7 +114,7 @@ const useEvent = () => {
             });
         eventActions.push({
           icon: Icon.Calendar,
-          title: "Open in calendar",
+          title: "Open in Planner",
           action: () => {
             open(
               `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=task&assignmentId=${event.assist?.taskId}`
@@ -123,7 +125,7 @@ const useEvent = () => {
       case "ONE_ON_ONE_ASSIGNMENT":
         eventActions.push({
           icon: Icon.Calendar,
-          title: "Open in calendar",
+          title: "Open in Planner",
           action: () => {
             open(
               `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=one-on-one&assignmentId=${event.assist?.dailyHabitId}`
@@ -150,7 +152,7 @@ const useEvent = () => {
 
         eventActions.push({
           icon: Icon.Calendar,
-          title: "Open in calendar",
+          title: "Open in Planner",
           action: () => {
             open(
               `https://app.reclaim.ai/planner?eventId=${event.eventId}&type=habit&assignmentId=${event.assist?.dailyHabitId}`
@@ -159,17 +161,15 @@ const useEvent = () => {
         });
 
         break;
-
-      default:
-        eventActions.push({
-          icon: Icon.Calendar,
-          title: "Open in calendar",
-          action: () => {
-            open(`https://app.reclaim.ai/planner?eventId=${event.eventId}`);
-          },
-        });
-        break;
     }
+
+    eventActions.push({
+      icon: Icon.Calendar,
+      title: "Open in Google Calendar",
+      action: () => {
+        open(`${apiUrl}/events/view/${event.key}`);
+      },
+    });
 
     return eventActions;
   }, []);
