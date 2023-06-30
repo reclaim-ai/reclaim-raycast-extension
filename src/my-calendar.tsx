@@ -1,5 +1,5 @@
 import { Action, ActionPanel, Color, Icon, List } from "@raycast/api";
-import { addDays, endOfDay, isAfter, isBefore, isWithinInterval, startOfDay } from "date-fns";
+import { addDays, endOfDay, formatDistance, isAfter, isBefore, isWithinInterval, startOfDay } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useEvent } from "./hooks/useEvent";
 import { EventActions } from "./hooks/useEvent.types";
@@ -38,6 +38,8 @@ const EventActionsList = ({ event }: { event: Event }) => {
   );
 };
 
+const now = new Date();
+
 const ListSection = ({ events, sectionTitle }: { sectionTitle: string; events: Event[] }) => {
   const { showFormattedEventTitle } = useEvent();
 
@@ -52,7 +54,11 @@ const ListSection = ({ events, sectionTitle }: { sectionTitle: string; events: E
             source: Icon.Dot,
           }}
           accessories={[
-            { date: new Date(item.eventStart) },
+            {
+              text: formatDistance(new Date(item.eventStart), now, {
+                addSuffix: true,
+              }).replace("about", ""),
+            },
             { tag: { value: item.free ? "free" : "busy", color: Color.Blue } },
           ]}
           actions={<EventActionsList event={item} />}

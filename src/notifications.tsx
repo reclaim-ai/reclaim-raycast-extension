@@ -116,19 +116,22 @@ export default function Command() {
   };
 
   const title = useMemo(() => {
+    const now = new Date();
+    const NO_EVENTS_STR = "No upcoming events";
+
     const notEndedEvents = data
       ?.filter((event) => {
         const end = new Date(event.eventEnd);
-        return isAfter(end, new Date());
+        return isAfter(end, now);
       })
       .sort(sortEvents);
 
-    if (!notEndedEvents?.length) return "No upcoming events";
+    if (!notEndedEvents?.length) return NO_EVENTS_STR;
 
     const hasEventsNow = notEndedEvents.filter((event) => {
       const start = new Date(event.eventStart);
       const end = addMinutes(new Date(event.eventStart), GRACE_PERIOD);
-      return isWithinInterval(new Date(), { start, end });
+      return isWithinInterval(now, { start, end });
     });
 
     if (hasEventsNow.length > 0) {
@@ -140,20 +143,26 @@ export default function Command() {
     const nextEvents = notEndedEvents
       .filter((event) => {
         const start = new Date(event.eventStart);
-        return isAfter(start, new Date());
+        return isAfter(start, now);
       })
       .filter((event) => {
         const start = new Date(event.eventStart);
         const end = new Date(event.eventEnd);
-        return !isWithinInterval(new Date(), { start, end });
+        return !isWithinInterval(now, { start, end });
+      })
+      .filter((event) => {
+        const start = new Date(event.eventStart);
+        return isWithinInterval(start, { start: now, end: endOfDay(now) });
       })
       .sort(sortEvents);
+
+    if (!nextEvents.length) return NO_EVENTS_STR;
 
     const evNext = nextEvents[0];
     const realEventTitle = evNext.sourceDetails?.title || evNext.title;
 
     return `Next: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)} ${miniDuration(
-      formatDistance(new Date(nextEvents[0].eventStart), new Date(), {
+      formatDistance(new Date(nextEvents[0].eventStart), now, {
         addSuffix: true,
       })
     )}`;

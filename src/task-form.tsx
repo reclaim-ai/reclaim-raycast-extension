@@ -1,7 +1,9 @@
 import { Action, ActionPanel, Form, Toast, popToRoot, showToast } from "@raycast/api";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTask } from "./hooks/useTask";
 import { TIME_BLOCK_IN_MINUTES, formatDuration, parseDurationToMinutes } from "./utils/dates";
+import { useUser } from "./hooks/useUser";
+import { addDays, addMinutes } from "date-fns";
 
 interface FormValues {
   title: string;
@@ -27,22 +29,38 @@ interface Props {
 export default (props: Props) => {
   const { timeNeeded: userTimeNeeded, title: userTitle, interpreter } = props;
 
+  const { currentUser } = useUser();
   const { createTask } = useTask();
+
+  const defaults = useMemo(
+    () => ({
+      defaultDueDate: addDays(new Date(), currentUser?.features.taskSettings.defaults.dueInDays || 0),
+      defaultSnoozeDate: addMinutes(new Date(), currentUser?.features.taskSettings.defaults.delayedStartInMinutes || 0),
+      minDuration: (currentUser?.features.taskSettings.defaults.minChunkSize || 1) * TIME_BLOCK_IN_MINUTES,
+      maxDuration: (currentUser?.features.taskSettings.defaults.maxChunkSize || 1) * TIME_BLOCK_IN_MINUTES,
+      duration: (currentUser?.features.taskSettings.defaults.timeChunksRequired || 1) * TIME_BLOCK_IN_MINUTES,
+    }),
+    [currentUser]
+  );
+
   const [timeNeeded, setTimeNeeded] = useState(
-    userTimeNeeded || `${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES}m` || ""
+    formatDuration(
+      `${userTimeNeeded || (interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES || defaults.duration}m`
+    )
   );
-  const [timeNeededError, setTimeNeededError] = useState<string | undefined>();
-  const [durationMin, setDurationMin] = useState(
-    `${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES}m` || ""
-  );
-  const [durationMinError, setDurationMinError] = useState<string | undefined>();
   const [durationMax, setDurationMax] = useState(
-    `${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES}m` || ""
+    formatDuration(`${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES || defaults.maxDuration}m`)
   );
+  const [durationMin, setDurationMin] = useState(
+    formatDuration(`${(interpreter?.durationTimeChunk || 0) * TIME_BLOCK_IN_MINUTES || defaults.minDuration}m`)
+  );
+
+  const [timeNeededError, setTimeNeededError] = useState<string | undefined>();
+  const [durationMinError, setDurationMinError] = useState<string | undefined>();
   const [durationMaxError, setDurationMaxError] = useState<string | undefined>();
 
-  const [due, setDue] = useState<Date | null>(interpreter ? interpreter.due : null);
-  const [snooze, setSnooze] = useState<Date | null>(interpreter ? interpreter.snoozeUntil : null);
+  const [due, setDue] = useState<Date | null>(interpreter ? interpreter.due : defaults.defaultDueDate);
+  const [snooze, setSnooze] = useState<Date | null>(interpreter ? interpreter.snoozeUntil : defaults.defaultSnoozeDate);
 
   const handleSubmit = async (formValues: FormValues) => {
     await showToast(Toast.Style.Animated, "Creating task...");
