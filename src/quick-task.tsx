@@ -1,7 +1,8 @@
 import { popToRoot, showToast, Toast } from "@raycast/api";
-import { endOfDay } from "date-fns";
+import { addDays, addMinutes, endOfDay } from "date-fns";
 import { axiosPromiseData, fetcher } from "./utils/axiosPromise";
 import { formatDuration, parseDurationToMinutes, TIME_BLOCK_IN_MINUTES } from "./utils/dates";
+import { ApiResponseUser } from "./hooks/useUser.types";
 
 type Props = { arguments: { event: string; time: string } };
 
@@ -26,21 +27,39 @@ export default async function Command(props: Props) {
 
     if (time.replace(/(\s|^)\d+(\s|$)/g, "") === "") {
       toast.style = Toast.Style.Failure;
-      toast.title = "Please provide a valid time (hours/min)";
+      toast.title = "Please provide a valid time. (hours/min)";
       return;
     }
 
     const durationBlock = Number(parseDurationToMinutes(formatDuration(time))) / TIME_BLOCK_IN_MINUTES;
 
+    const [user, userError] = await axiosPromiseData<ApiResponseUser>(fetcher("/users/current"));
+
+    if (!user && userError) {
+      toast.style = Toast.Style.Failure;
+      toast.title = "Failed to get user info. Please check your settings.";
+      return;
+    }
+
+    const userDefaults = {
+      defaultDueDate: addDays(new Date(), user?.features.taskSettings.defaults.dueInDays || 0),
+      defaultSnoozeDate: addMinutes(new Date(), user?.features.taskSettings.defaults.delayedStartInMinutes || 0),
+      minDuration: (user?.features.taskSettings.defaults.minChunkSize || 1) * TIME_BLOCK_IN_MINUTES,
+      maxDuration: (user?.features.taskSettings.defaults.maxChunkSize || 1) * TIME_BLOCK_IN_MINUTES,
+      duration: (user?.features.taskSettings.defaults.timeChunksRequired || 1) * TIME_BLOCK_IN_MINUTES,
+      category: user?.features.taskSettings.defaults.category || "WORK",
+      private: user?.features.taskSettings.defaults.alwaysPrivate || true,
+    };
+
     const data = {
       title: event,
-      eventCategory: "WORK",
+      eventCategory: userDefaults.category,
       timeChunksRequired: durationBlock,
-      snoozeUntil: new Date().toJSON(),
-      due: endOfDay(new Date()).toJSON(),
-      minChunkSize: durationBlock,
-      maxChunkSize: durationBlock,
-      alwaysPrivate: true,
+      snoozeUntil: userDefaults.defaultSnoozeDate.toJSON(),
+      due: userDefaults.defaultDueDate.toJSON(),
+      minChunkSize: userDefaults.minDuration,
+      maxChunkSize: userDefaults.maxDuration,
+      alwaysPrivate: userDefaults.private,
     };
 
     console.log("### => [POST] /tasks", data);
