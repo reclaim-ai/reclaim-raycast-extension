@@ -1,16 +1,38 @@
-import { Action, ActionPanel, Icon, List } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, Toast, open, showToast } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { useSchedulingLinks } from "./hooks/useSchedulingLinks";
 import { SchedulingLink, SchedulingLinkGroup } from "./types/scheduling-link";
 import { useUser } from "./hooks/useUser";
 import { resolveTimePolicy } from "./utils/time-policy";
+import { axiosPromiseData, fetcher } from "./utils/axiosPromise";
 
 const SLActions = ({ link }: { link: SchedulingLink }) => {
   const url = `https://app.reclaim.ai/m/${link.pageSlug}/${link.slug}`;
+
+  const createOneOffLink = async () => {
+    const [oneOff, error] = await axiosPromiseData<SchedulingLink>(
+      fetcher("/scheduling-link/derivative", {
+        method: "POST",
+        data: {
+          parentId: link.id,
+        },
+      })
+    );
+
+    if (!error && oneOff) {
+      open(`https://app.reclaim.ai/scheduling-links/one-off/${oneOff.id}/edit`);
+    } else {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Error creating one-off link. Try using the reclaim.ai web app.",
+      });
+    }
+  };
+
   return (
     <ActionPanel>
       <Action.CopyToClipboard title="Copy Link to Clipboard" content={url} />
-      {/* <Action.Open title="Create One Off Link" target={url} /> */}
+      <Action icon={Icon.AddPerson} title="Create One Off Link" onAction={createOneOffLink} />
       <Action.Open title="Open in Browser" target={url} />
     </ActionPanel>
   );

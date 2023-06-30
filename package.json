@@ -43,7 +43,7 @@
   "commands": [
     {
       "name": "notifications",
-      "title": "Reclaim Notifications",
+      "title": "Notifications",
       "description": "Show notifications in the Menu Bar.",
       "mode": "menu-bar",
       "subtitle": "Reclaim",
@@ -79,12 +79,6 @@
       "mode": "view"
     },
     {
-      "name": "tasks",
-      "title": "My Tasks",
-      "description": "",
-      "mode": "view"
-    },
-    {
       "name": "create-task",
       "title": "Create Task",
       "description": "",
@@ -92,13 +86,7 @@
     },
     {
       "name": "scheduling-links",
-      "title": "View Scheduling Links",
-      "description": "",
-      "mode": "view"
-    },
-    {
-      "name": "ask-anything",
-      "title": "Ask Anything",
+      "title": "Scheduling Links",
       "description": "",
       "mode": "view"
     }
