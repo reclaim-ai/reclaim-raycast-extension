@@ -1,8 +1,8 @@
 import { popToRoot, showToast, Toast } from "@raycast/api";
-import { addDays, addMinutes, endOfDay } from "date-fns";
+import { addDays, addMinutes } from "date-fns";
+import { ApiResponseUser } from "./hooks/useUser.types";
 import { axiosPromiseData, fetcher } from "./utils/axiosPromise";
 import { formatDuration, parseDurationToMinutes, TIME_BLOCK_IN_MINUTES } from "./utils/dates";
-import { ApiResponseUser } from "./hooks/useUser.types";
 
 type Props = { arguments: { event: string; time: string } };
 
@@ -62,16 +62,12 @@ export default async function Command(props: Props) {
       alwaysPrivate: userDefaults.private,
     };
 
-    console.log("### => [POST] /tasks", data);
-
     const [task, error] = await axiosPromiseData(
       fetcher("/tasks", {
         method: "POST",
         data,
       })
     );
-
-    console.log("### => [RESPONSE] /tasks", task);
 
     if (!task && error) throw error;
 
