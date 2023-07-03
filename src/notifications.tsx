@@ -13,7 +13,7 @@ import { miniDuration } from "./utils/dates";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
-const GRACE_PERIOD = 3;
+const GRACE_PERIOD = 5;
 
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
@@ -94,7 +94,7 @@ export default function Command() {
         sectionTitle: "Upcoming events",
         events: data
           .filter((event) => {
-            return event.assist?.eventType !== "CONF_BUFFER";
+            return (event.assist?.eventType !== "CONF_BUFFER" && event.assist?.eventType !== "TRAVEL_BUFFER");
           })
           .filter((event) => {
             const start = new Date(event.eventStart);
