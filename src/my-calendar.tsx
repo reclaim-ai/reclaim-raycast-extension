@@ -147,7 +147,7 @@ export default function Command() {
       isLoading={isLoading}
       searchText={searchText}
       onSearchTextChange={setSearchText}
-      navigationTitle="Search events"
+      navigationTitle="My Calendar"
       searchBarPlaceholder="Search your events"
     >
       {events.map((section) => (

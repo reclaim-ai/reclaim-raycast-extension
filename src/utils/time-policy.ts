@@ -4,7 +4,7 @@ export const resolveTimePolicy = (tp: string) => {
       return "Working hours";
     }
     case "MEETING": {
-      return "Meetings hours";
+      return "Meeting hours";
     }
     case "PERSONAL": {
       return "Personal hours";
