@@ -148,7 +148,7 @@ export default function Command() {
       searchText={searchText}
       onSearchTextChange={setSearchText}
       navigationTitle="Search events"
-      searchBarPlaceholder="Search your event"
+      searchBarPlaceholder="Search your events"
     >
       {events.map((section) => (
         <ListSection key={section.section} sectionTitle={section.sectionTitle} events={section.events} />
