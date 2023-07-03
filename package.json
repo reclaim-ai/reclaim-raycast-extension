@@ -79,7 +79,7 @@
       "mode": "view"
     },
     {
-      "name": "create-task",
+      "name": "task-form",
       "title": "Create Task",
       "description": "",
       "mode": "view"
