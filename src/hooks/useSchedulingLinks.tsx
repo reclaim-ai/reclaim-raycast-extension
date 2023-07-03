@@ -1,6 +1,6 @@
 import { axiosPromiseData } from "../utils/axiosPromise";
 import reclaimApi from "./useApi";
-import { ApiSchedulingLink, ApiSchedulingLinkGroups } from "./useSchedulingLinks.types";
+import { ApiSchedulingLink, ApiSchedulingLinkGroups } from "./useSchedulingLink.types";
 
 const useSchedulingLinks = () => {
   const { fetcher } = reclaimApi();
