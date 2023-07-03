@@ -43,7 +43,7 @@
   "commands": [
     {
       "name": "notifications",
-      "title": "Notifications",
+      "title": "Calendar Menubar",
       "description": "Show notifications in the Menu Bar.",
       "mode": "menu-bar",
       "subtitle": "Reclaim",
