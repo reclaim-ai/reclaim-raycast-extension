@@ -95,6 +95,9 @@ export default function Command() {
         sectionTitle: "Now",
         events: data
           .filter((event) => {
+            return event.reclaimEventType !== "CONF_BUFFER" && event.reclaimEventType !== "TRAVEL_BUFFER";
+          })
+          .filter((event) => {
             const start = new Date(event.eventStart);
             const end = new Date(event.eventEnd);
             return isWithinInterval(now, { start, end });
