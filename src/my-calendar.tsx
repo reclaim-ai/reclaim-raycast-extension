@@ -1,5 +1,14 @@
 import { Action, ActionPanel, Color, Icon, List } from "@raycast/api";
-import { addDays, endOfDay, formatDistance, isAfter, isBefore, isWithinInterval, startOfDay } from "date-fns";
+import {
+  addDays,
+  differenceInHours,
+  endOfDay,
+  formatDistance,
+  isAfter,
+  isBefore,
+  isWithinInterval,
+  startOfDay,
+} from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useEvent } from "./hooks/useEvent";
 import { EventActions } from "./hooks/useEvent.types";
@@ -86,36 +95,52 @@ export default function Command() {
       {
         section: "NOW",
         sectionTitle: "Now",
-        events: eventsData.filter((event) => {
-          const start = new Date(event.eventStart);
-          const end = new Date(event.eventEnd);
-          return isWithinInterval(now, { start, end });
-        }),
+        events: eventsData
+          .filter((event) => {
+            const start = new Date(event.eventStart);
+            const end = new Date(event.eventEnd);
+            return isWithinInterval(now, { start, end });
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
+          }),
       },
       {
         section: "TODAY",
         sectionTitle: "Today",
-        events: eventsData.filter((event) => {
-          const start = new Date(event.eventStart);
-          return isAfter(start, now) && isBefore(start, endOfDay(now));
-        }),
+        events: eventsData
+          .filter((event) => {
+            const start = new Date(event.eventStart);
+            return isAfter(start, now) && isBefore(start, endOfDay(now));
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
+          }),
       },
       {
         section: "EARLIER_TODAY",
         sectionTitle: "Earlier today",
-        events: eventsData.filter((event) => {
-          const end = new Date(event.eventEnd);
-          const start = new Date(event.eventStart);
-          return isAfter(start, today) && isBefore(end, now);
-        }),
+        events: eventsData
+          .filter((event) => {
+            const end = new Date(event.eventEnd);
+            const start = new Date(event.eventStart);
+            return isAfter(start, today) && isBefore(end, now);
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
+          }),
       },
       {
         section: "TOMORROW",
         sectionTitle: "Tomorrow",
-        events: eventsData.filter((event) => {
-          const start = new Date(event.eventStart);
-          return isWithinInterval(start, { start: tomorrow, end: endOfDay(tomorrow) });
-        }),
+        events: eventsData
+          .filter((event) => {
+            const start = new Date(event.eventStart);
+            return isWithinInterval(start, { start: tomorrow, end: endOfDay(tomorrow) });
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
+          }),
       },
     ];
 
@@ -147,7 +172,7 @@ export default function Command() {
       isLoading={isLoading}
       searchText={searchText}
       onSearchTextChange={setSearchText}
-      navigationTitle="Search events"
+      navigationTitle="My Calendar"
       searchBarPlaceholder="Search your events"
     >
       {events.map((section) => (

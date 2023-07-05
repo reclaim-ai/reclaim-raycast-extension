@@ -1,10 +1,10 @@
 import { Action, ActionPanel, Icon, List, Toast, open, showToast } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { useSchedulingLinks } from "./hooks/useSchedulingLinks";
-import { SchedulingLink, SchedulingLinkGroup } from "./types/scheduling-link";
 import { useUser } from "./hooks/useUser";
-import { resolveTimePolicy } from "./utils/time-policy";
+import { SchedulingLink, SchedulingLinkGroup } from "./types/scheduling-link";
 import { axiosPromiseData, fetcher } from "./utils/axiosPromise";
+import { resolveTimePolicy } from "./utils/time-policy";
 
 const SLActions = ({ link }: { link: SchedulingLink }) => {
   const url = `https://app.reclaim.ai/m/${link.pageSlug}/${link.slug}`;
@@ -83,7 +83,7 @@ export default function Command() {
       filtering={true}
       searchText={searchText}
       onSearchTextChange={setSearchText}
-      navigationTitle="Search Scheduling Links"
+      navigationTitle="Scheduling Links"
       isShowingDetail
     >
       <>
