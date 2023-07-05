@@ -1,6 +1,16 @@
 import { Icon, LaunchType, MenuBarExtra, getPreferenceValues, launchCommand, open } from "@raycast/api";
 import { useFetch } from "@raycast/utils";
-import { addDays, addMinutes, endOfDay, format, formatDistance, isAfter, isWithinInterval, startOfDay } from "date-fns";
+import {
+  addDays,
+  addMinutes,
+  differenceInHours,
+  endOfDay,
+  format,
+  formatDistance,
+  isAfter,
+  isWithinInterval,
+  startOfDay,
+} from "date-fns";
 import { useMemo } from "react";
 import { useEvent } from "./hooks/useEvent";
 import { ApiResponseEvents } from "./hooks/useEvent.types";
@@ -73,6 +83,11 @@ export default function Command() {
     }
   );
 
+  const { data: moment, isLoading: isLoadingMoment } = useFetch(`${apiUrl}/moment`, {
+    headers: fetchHeaders,
+    keepPreviousData: true,
+  });
+
   const events = useMemo<EventSection[]>(() => {
     if (!data) return [];
 
@@ -83,22 +98,29 @@ export default function Command() {
       {
         section: "NOW",
         sectionTitle: "Now",
-        events: data.filter((event) => {
-          const start = new Date(event.eventStart);
-          const end = new Date(event.eventEnd);
-          return isWithinInterval(now, { start, end });
-        }),
+        events: data
+          .filter((event) => {
+            const start = new Date(event.eventStart);
+            const end = new Date(event.eventEnd);
+            return isWithinInterval(now, { start, end });
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
+          }),
       },
       {
         section: "TODAY",
         sectionTitle: "Upcoming events",
         events: data
           .filter((event) => {
-            return (event.assist?.eventType !== "CONF_BUFFER" && event.assist?.eventType !== "TRAVEL_BUFFER");
+            return event.reclaimEventType !== "CONF_BUFFER" && event.reclaimEventType !== "TRAVEL_BUFFER";
           })
           .filter((event) => {
             const start = new Date(event.eventStart);
             return isWithinInterval(start, { start: now, end: endOfDay(today) });
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
           })
           .slice(0, NUMBER_OF_EVENTS),
       },
@@ -118,11 +140,15 @@ export default function Command() {
   const title = useMemo(() => {
     const now = new Date();
     const NO_EVENTS_STR = "No upcoming events";
+    console.log("### =>", moment);
 
     const notEndedEvents = data
       ?.filter((event) => {
         const end = new Date(event.eventEnd);
         return isAfter(end, now);
+      })
+      .filter((event) => {
+        return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
       })
       .sort(sortEvents);
 
@@ -166,7 +192,7 @@ export default function Command() {
         addSuffix: true,
       })
     )}`;
-  }, [data]);
+  }, [data, moment, isLoadingMoment]);
 
   return (
     <MenuBarExtra isLoading={isLoading} icon={"command-icon.png"} title={title} tooltip="test">
