@@ -105,8 +105,6 @@ export const formatDuration = (e: string | undefined) => {
 };
 
 export const miniDuration = (d: string) => {
-  console.log("### =>", d);
-
   return d
     .replace(" hours", "h")
     .replace(" hour", "h")
