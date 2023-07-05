@@ -20,4 +20,4 @@ export const truncateEventSize = (eventTitle: string) => {
     return `${eventTitle.substring(0, TRUNCATE_LENGTH)}...`;
   }
   return eventTitle;
-}
+};
