@@ -1,3 +1,3 @@
-# reclaim2 Changelog
+# reclaim Changelog
 
 ## [Initial Version] - 2023-06-06
