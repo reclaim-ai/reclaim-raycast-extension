@@ -1,15 +1,25 @@
 import { Icon, LaunchType, MenuBarExtra, getPreferenceValues, launchCommand, open } from "@raycast/api";
 import { useFetch } from "@raycast/utils";
-import { addDays, addMinutes, endOfDay, format, formatDistance, isAfter, isWithinInterval, startOfDay } from "date-fns";
+import {
+  addDays,
+  addMinutes,
+  differenceInHours,
+  endOfDay,
+  format,
+  formatDistance,
+  isAfter,
+  isWithinInterval,
+  startOfDay,
+} from "date-fns";
 import { useMemo } from "react";
 import { useEvent } from "./hooks/useEvent";
 import { ApiResponseEvents } from "./hooks/useEvent.types";
 import { Event } from "./types/event";
 import { NativePreferences } from "./types/preferences";
 import { sortEvents } from "./utils/arrays";
+import { miniDuration } from "./utils/dates";
 import { eventColors, truncateEventSize } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
-import { miniDuration } from "./utils/dates";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
@@ -83,22 +93,29 @@ export default function Command() {
       {
         section: "NOW",
         sectionTitle: "Now",
-        events: data.filter((event) => {
-          const start = new Date(event.eventStart);
-          const end = new Date(event.eventEnd);
-          return isWithinInterval(now, { start, end });
-        }),
+        events: data
+          .filter((event) => {
+            const start = new Date(event.eventStart);
+            const end = new Date(event.eventEnd);
+            return isWithinInterval(now, { start, end });
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
+          }),
       },
       {
         section: "TODAY",
         sectionTitle: "Upcoming events",
         events: data
           .filter((event) => {
-            return (event.assist?.eventType !== "CONF_BUFFER" && event.assist?.eventType !== "TRAVEL_BUFFER");
+            return event.reclaimEventType !== "CONF_BUFFER" && event.reclaimEventType !== "TRAVEL_BUFFER";
           })
           .filter((event) => {
             const start = new Date(event.eventStart);
             return isWithinInterval(start, { start: now, end: endOfDay(today) });
+          })
+          .filter((event) => {
+            return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
           })
           .slice(0, NUMBER_OF_EVENTS),
       },
@@ -123,6 +140,9 @@ export default function Command() {
       ?.filter((event) => {
         const end = new Date(event.eventEnd);
         return isAfter(end, now);
+      })
+      .filter((event) => {
+        return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
       })
       .sort(sortEvents);
 
