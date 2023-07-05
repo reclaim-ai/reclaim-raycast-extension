@@ -54,23 +54,7 @@
       "name": "quick-task",
       "title": "Quick Task",
       "description": "Quickly create a Task",
-      "mode": "no-view",
-      "arguments": [
-        {
-          "type": "text",
-          "name": "event",
-          "title": "event",
-          "placeholder": "Task (Meeting prep)",
-          "required": false
-        },
-        {
-          "type": "text",
-          "name": "time",
-          "title": "time",
-          "placeholder": "Time (15min, 2h)",
-          "required": false
-        }
-      ]
+      "mode": "view"
     },
     {
       "name": "my-calendar",
