@@ -17,9 +17,9 @@ import { ApiResponseEvents } from "./hooks/useEvent.types";
 import { Event } from "./types/event";
 import { NativePreferences } from "./types/preferences";
 import { sortEvents } from "./utils/arrays";
+import { miniDuration } from "./utils/dates";
 import { eventColors, truncateEventSize } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
-import { miniDuration } from "./utils/dates";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
@@ -83,11 +83,6 @@ export default function Command() {
     }
   );
 
-  const { data: moment, isLoading: isLoadingMoment } = useFetch(`${apiUrl}/moment`, {
-    headers: fetchHeaders,
-    keepPreviousData: true,
-  });
-
   const events = useMemo<EventSection[]>(() => {
     if (!data) return [];
 
@@ -140,7 +135,6 @@ export default function Command() {
   const title = useMemo(() => {
     const now = new Date();
     const NO_EVENTS_STR = "No upcoming events";
-    console.log("### =>", moment);
 
     const notEndedEvents = data
       ?.filter((event) => {
@@ -192,7 +186,7 @@ export default function Command() {
         addSuffix: true,
       })
     )}`;
-  }, [data, moment, isLoadingMoment]);
+  }, [data]);
 
   return (
     <MenuBarExtra isLoading={isLoading} icon={"command-icon.png"} title={title} tooltip="test">
