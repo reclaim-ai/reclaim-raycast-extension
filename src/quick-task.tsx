@@ -91,8 +91,8 @@
 
 import { Action, ActionPanel, Icon, List, useNavigation } from "@raycast/api";
 import { useState } from "react";
-import { setTimeout } from "timers/promises";
-import { FilteredAnything } from "./filtered-anything";
+import { useDebounce } from "./hooks/useDebounce";
+import TaskForm from "./task-form";
 
 export type ListType = {
   title: string;
@@ -104,24 +104,16 @@ export default function Command() {
   const [list, setList] = useState<ListType[]>([]);
   const [query, setQuery] = useState<string>("");
 
-  const delayedInput = async (input: string) => {
-    setQuery(input);
-    if (list.length !== 0) return;
-    await setTimeout(2000);
-    setList([
-      {
-        title: "Ask anything about Tasks",
-        type: "task",
-      },
-      {
-        title: "Ask anything about Scheduling Links",
-        type: "scheduling-link",
-      },
-    ]);
+  const _onChangeDebounced = async (text: string) => {
+    if (text !== "") {
+      console.log("### =>", text);
+    }
   };
 
+  const onChangeDebounced = useDebounce(_onChangeDebounced, 1000);
+
   return (
-    <List searchBarPlaceholder="Ask anything..." onSearchTextChange={delayedInput}>
+    <List searchBarPlaceholder="Fold laundry, 15 min, tomorrow" onSearchTextChange={onChangeDebounced}>
       {list.length === 0 ? (
         <List.EmptyView
           icon={Icon.LightBulb}
@@ -139,7 +131,7 @@ export default function Command() {
                 <Action
                   title={item.title}
                   onAction={() => {
-                    push(<FilteredAnything type={item.type} query={query} />);
+                    push(<TaskForm />);
                   }}
                 />
               </ActionPanel>
