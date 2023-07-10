@@ -75,7 +75,7 @@ export default function Command() {
     end: format(addDays(new Date(), 2), "yyyy-MM-dd"),
   };
 
-  const { data, isLoading } = useFetch<ApiResponseEvents>(
+  const { data: eventData, isLoading: isLoadingEvents } = useFetch<ApiResponseEvents>(
     `${apiUrl}/events?sourceDetails=true&start=${range.start}&end=${range.end}`,
     {
       headers: fetchHeaders,
@@ -83,8 +83,16 @@ export default function Command() {
     }
   );
 
+  const { data: eventMoment, isLoading: isLoadingMoment } = useFetch<any>(
+    `${apiUrl}/moment/next`,
+    {
+      headers: fetchHeaders,
+      keepPreviousData: true,
+    }
+  );
+
   const events = useMemo<EventSection[]>(() => {
-    if (!data) return [];
+    if (!eventData) return [];
 
     const now = new Date();
     const today = startOfDay(now);
@@ -93,7 +101,7 @@ export default function Command() {
       {
         section: "NOW",
         sectionTitle: "Now",
-        events: data
+        events: eventData
           .filter((event) => {
             return event.reclaimEventType !== "CONF_BUFFER" && event.reclaimEventType !== "TRAVEL_BUFFER";
           })
@@ -109,7 +117,7 @@ export default function Command() {
       {
         section: "TODAY",
         sectionTitle: "Upcoming events",
-        events: data
+        events: eventData
           .filter((event) => {
             return event.reclaimEventType !== "CONF_BUFFER" && event.reclaimEventType !== "TRAVEL_BUFFER";
           })
@@ -125,7 +133,7 @@ export default function Command() {
     ];
 
     return events.filter((event) => event.events.length > 0);
-  }, [data]);
+  }, [eventData]);
 
   const handleOpenReclaim = () => {
     open("https://app.reclaim.ai");
@@ -139,7 +147,7 @@ export default function Command() {
     const now = new Date();
     const NO_EVENTS_STR = "No upcoming events";
 
-    const notEndedEvents = data
+    const notEndedEvents = eventData
       ?.filter((event) => {
         const end = new Date(event.eventEnd);
         return isAfter(end, now);
@@ -189,10 +197,10 @@ export default function Command() {
         addSuffix: true,
       })
     )}`;
-  }, [data]);
+  }, [eventData]);
 
   return (
-    <MenuBarExtra isLoading={isLoading} icon={"command-icon.png"} title={title} tooltip="test">
+    <MenuBarExtra isLoading={isLoadingEvents} icon={"command-icon.png"} title={title} tooltip="test">
       {events.map((eventSection) => (
         <EventsSection
           key={eventSection.section}
