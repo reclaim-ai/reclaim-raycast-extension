@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import { useMemo } from "react";
 import { useEvent } from "./hooks/useEvent";
-import { ApiResponseEvents } from "./hooks/useEvent.types";
+import { ApiResponseEvents, ApiResponseMoment } from "./hooks/useEvent.types";
 import { Event } from "./types/event";
 import { NativePreferences } from "./types/preferences";
 import { sortEvents } from "./utils/arrays";
@@ -83,13 +83,10 @@ export default function Command() {
     }
   );
 
-  const { data: eventMoment, isLoading: isLoadingMoment } = useFetch<any>(
-    `${apiUrl}/moment/next`,
-    {
-      headers: fetchHeaders,
-      keepPreviousData: true,
-    }
-  );
+  const { data: eventMoment, isLoading: isLoadingMoment } = useFetch<ApiResponseMoment>(`${apiUrl}/moment/next`, {
+    headers: fetchHeaders,
+    keepPreviousData: true,
+  });
 
   const events = useMemo<EventSection[]>(() => {
     if (!eventData) return [];
@@ -144,63 +141,22 @@ export default function Command() {
   };
 
   const title = useMemo(() => {
-    const now = new Date();
-    const NO_EVENTS_STR = "No upcoming events";
+    const eventNow = eventMoment?.event;
 
-    const notEndedEvents = eventData
-      ?.filter((event) => {
-        const end = new Date(event.eventEnd);
-        return isAfter(end, now);
-      })
-      .filter((event) => {
-        return !(differenceInHours(new Date(event.eventEnd), new Date(event.eventStart)) >= 24);
-      })
-      .sort(sortEvents);
+    if (eventNow) {
+      const realEventTitle = eventNow.sourceDetails?.title || eventNow.title;
+      const eventStart = new Date(eventNow.eventStart);
+      const eventEnd = new Date(eventNow.eventEnd);
 
-    if (!notEndedEvents?.length) return NO_EVENTS_STR;
-
-    const hasEventsNow = notEndedEvents.filter((event) => {
-      const start = new Date(event.eventStart);
-      const end = addMinutes(new Date(event.eventStart), GRACE_PERIOD);
-      return isWithinInterval(now, { start, end });
-    });
-
-    if (hasEventsNow.length > 0) {
-      const evNow = hasEventsNow[hasEventsNow.length - 1];
-      const realEventTitle = evNow.sourceDetails?.title || evNow.title;
-      return `Now: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)}`;
+      const nowOrNext = isWithinInterval(new Date(), { start: eventStart, end: eventEnd });
+      return `${nowOrNext}: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)}`;
     }
 
-    const nextEvents = notEndedEvents
-      .filter((event) => {
-        const start = new Date(event.eventStart);
-        return isAfter(start, now);
-      })
-      .filter((event) => {
-        const start = new Date(event.eventStart);
-        const end = new Date(event.eventEnd);
-        return !isWithinInterval(now, { start, end });
-      })
-      .filter((event) => {
-        const start = new Date(event.eventStart);
-        return isWithinInterval(start, { start: now, end: endOfDay(now) });
-      })
-      .sort(sortEvents);
-
-    if (!nextEvents.length) return NO_EVENTS_STR;
-
-    const evNext = nextEvents[0];
-    const realEventTitle = evNext.sourceDetails?.title || evNext.title;
-
-    return `Next: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)} ${miniDuration(
-      formatDistance(new Date(nextEvents[0].eventStart), now, {
-        addSuffix: true,
-      })
-    )}`;
-  }, [eventData]);
+    return "No upcoming events";
+  }, [eventMoment]);
 
   return (
-    <MenuBarExtra isLoading={isLoadingEvents} icon={"command-icon.png"} title={title} tooltip="test">
+    <MenuBarExtra isLoading={isLoadingEvents || isLoadingMoment} icon={"command-icon.png"} title={title} tooltip="test">
       {events.map((eventSection) => (
         <EventsSection
           key={eventSection.section}
