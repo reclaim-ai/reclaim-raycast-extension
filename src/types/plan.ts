@@ -1,4 +1,4 @@
-type TaskPlanDetails = {
+export type TaskPlanDetails = {
   id: string;
   userId: string;
   title: string;
