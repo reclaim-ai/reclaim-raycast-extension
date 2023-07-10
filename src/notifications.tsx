@@ -149,7 +149,7 @@ export default function Command() {
       const eventEnd = new Date(eventNow.eventEnd);
 
       const nowOrNext = isWithinInterval(new Date(), { start: eventStart, end: eventEnd });
-      return `${nowOrNext}: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)}`;
+      return `${nowOrNext ? "Now" : "Next"}: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)}`;
     }
 
     return "No upcoming events";
