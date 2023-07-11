@@ -1,15 +1,29 @@
 import { Icon, LaunchType, MenuBarExtra, getPreferenceValues, launchCommand, open } from "@raycast/api";
 import { useFetch } from "@raycast/utils";
-import { addDays, differenceInHours, endOfDay, format, isWithinInterval, startOfDay } from "date-fns";
+import {
+  addDays,
+  addMinutes,
+  differenceInHours,
+  endOfDay,
+  format,
+  formatDistance,
+  isAfter,
+  isWithinInterval,
+  startOfDay,
+} from "date-fns";
 import { useMemo } from "react";
 import { useEvent } from "./hooks/useEvent";
 import { ApiResponseEvents, ApiResponseMoment } from "./hooks/useEvent.types";
 import { Event } from "./types/event";
 import { NativePreferences } from "./types/preferences";
+import { sortEvents } from "./utils/arrays";
+import { miniDuration } from "./utils/dates";
 import { eventColors, truncateEventSize } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
+
+const GRACE_PERIOD = 5;
 
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
