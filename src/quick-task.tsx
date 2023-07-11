@@ -58,10 +58,10 @@ export default function Command() {
           }}
           description={
             loading
-              ? `Thinking...`
-              : `"Meeting prep 30min by 11am tomorrow"
-"Prepare board slides 4h in a week"
-"Dishes 15min this afternoon"`
+              ? `Creating Task...`
+              : `"work task Prepare board slides (4h, due: in a week, notbefore: tomorrow)"
+                 "personal task Do the dishes (15min, due:today, notbefore: 12pm)"
+                 "work task Meeting prep (10min, due:11am tomorrow)"`
           }
           title="Quickly create a Task"
         />
