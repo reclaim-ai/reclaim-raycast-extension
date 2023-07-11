@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useDebounce } from "./hooks/useDebounce";
 import useInterpreter from "./hooks/useInterpreter";
 import TaskForm from "./task-form";
-import { Plan, TaskPlanDetails } from "./types/plan";
+import { TaskPlanDetails } from "./types/plan";
 
 export type ListType = {
   uuid: string;
@@ -49,7 +49,13 @@ export default function Command() {
     >
       {list.length === 0 ? (
         <List.EmptyView
-          icon={Icon.CopyClipboard}
+          icon={{
+            source: {
+              light:
+                "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad824439a2d75946dd1e3b_task-icon-black.png",
+              dark: "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad8244eff5a8955d93558f_task-icon-white.png",
+            },
+          }}
           description={
             loading
               ? `Thinking...`
