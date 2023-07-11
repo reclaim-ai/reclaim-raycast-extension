@@ -52,15 +52,15 @@ export default function Command() {
           icon={{
             source: {
               light:
-                "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad824439a2d75946dd1e3b_task-icon-black.png",
-              dark: "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad8244eff5a8955d93558f_task-icon-white.png",
+                "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad862c3d0c88a609394cb0_task-icon-black.png",
+              dark: "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad862ce481e4815740131e_task-icon-white.png",
             },
           }}
           description={
             loading
               ? `Thinking...`
               : `"Meeting prep 30min by 11am tomorrow"
-"Prepare Board slides 4h in a week"
+"Prepare board slides 4h in a week"
 "Dishes 15min this afternoon"`
           }
           title="Quickly create a Task"
