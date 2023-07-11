@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useDebounce } from "./hooks/useDebounce";
 import useInterpreter from "./hooks/useInterpreter";
 import TaskForm from "./task-form";
-import { TaskPlanDetails } from "./types/plan";
+import { Plan, TaskPlanDetails } from "./types/plan";
 
 export type ListType = {
   uuid: string;
@@ -21,7 +21,7 @@ export default function Command() {
     try {
       setLoading(true);
       if (text !== "") {
-        const response = await sendToInterpreter("task", text);
+        const response = (await sendToInterpreter("task", text)) as any;
         if (response) {
           setList(
             response.map((item) => ({
@@ -43,15 +43,21 @@ export default function Command() {
 
   return (
     <List
-      searchBarPlaceholder="Fold laundry, 15 min, tomorrow"
+      searchBarPlaceholder="Type in your task, duration, & due date…"
       isLoading={loading}
       onSearchTextChange={onChangeDebounced}
     >
       {list.length === 0 ? (
         <List.EmptyView
-          icon={Icon.LightBulb}
-          description={loading ? `Thinking...` : `“Some copy about the task creation ”`}
-          title="Ask Reclaim to create a task"
+          icon={Icon.CopyClipboard}
+          description={
+            loading
+              ? `Thinking...`
+              : `"Meeting prep 30min by 11am tomorrow"
+"Prepare Board slides 4h in a week"
+"Dishes 15min this afternoon"`
+          }
+          title="Quickly create a Task"
         />
       ) : (
         list.map((item) => (
