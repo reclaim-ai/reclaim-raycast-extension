@@ -18,6 +18,7 @@ const useTask = () => {
         notes: task.notes,
         alwaysPrivate: true,
       };
+      console.log("### => [POST] /tasks", data);
 
       const [createdTask, error] = await axiosPromiseData(
         fetcher("/tasks", {
@@ -27,6 +28,7 @@ const useTask = () => {
       );
       if (!createTask && error) throw error;
 
+      console.log("### => [POST] /tasks", createdTask);
       return createdTask;
     } catch (error) {
       console.error("Error while creating task", error);
