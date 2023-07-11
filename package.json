@@ -50,12 +50,6 @@
       "interval": "1m"
     },
     {
-      "name": "quick-link",
-      "title": "Quick Link",
-      "description": "Quickly create a link",
-      "mode": "view"
-    },
-    {
       "name": "quick-task",
       "title": "Quick Task",
       "description": "Quickly create a Task",
