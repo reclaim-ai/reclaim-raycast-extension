@@ -52,8 +52,8 @@ export default function Command() {
           icon={{
             source: {
               light:
-                "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad862c3d0c88a609394cb0_task-icon-black.png",
-              dark: "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad862ce481e4815740131e_task-icon-white.png",
+                "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad8af97797f06482ba8f43_task-icon-black.png",
+              dark: "https://uploads-ssl.webflow.com/5ec848ec2b50b6cfae06f6cc/64ad8af9581c1795283c0a65_task-icon-white.png",
             },
           }}
           description={
