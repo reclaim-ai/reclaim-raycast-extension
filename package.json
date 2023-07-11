@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "reclaim",
   "title": "Reclaim",
-  "description": "Quickly create Tasks, see your scheule, & share Scheduling Links from Reclaim",
+  "description": "Quickly create Tasks, see your schedule, & share Scheduling Links from Reclaim",
   "icon": "command-icon.png",
   "author": "webergnr",
   "owner": "reclaimai",
@@ -59,7 +59,7 @@
     {
       "name": "quick-task",
       "title": "Quick Task",
-      "description": "Quickly create a task",
+      "description": "Quickly create a Task",
       "mode": "view"
     },
     {
