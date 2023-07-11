@@ -1,5 +1,5 @@
-import { Plan } from "../types/plan";
+import { Plan, SchedulingLinkPlanDetails, TaskPlanDetails } from "../types/plan";
 
 export type ApiResponseInterpreter = {
-  interpretedPlans: Plan[];
+  interpretedPlans: Plan<TaskPlanDetails | SchedulingLinkPlanDetails>[];
 };

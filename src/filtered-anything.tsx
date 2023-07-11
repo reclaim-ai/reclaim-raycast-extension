@@ -2,7 +2,7 @@ import { Action, ActionPanel, Icon, List, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { useDebounce } from "./hooks/useDebounce";
 import useInterpreter from "./hooks/useInterpreter";
-import { Plan } from "./types/plan";
+import { Plan, TaskPlanDetails } from "./types/plan";
 import { ListType } from "./ask-anything";
 import TaskForm from "./task-form";
 
@@ -10,7 +10,7 @@ const FilteredAnything = ({ type, query }: { type: ListType["type"]; query: stri
   const { push } = useNavigation();
 
   const [list, setList] = useState<{ title: string; id: string }[]>([]);
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<Plan<TaskPlanDetails>[]>([]);
   const [search, setSearch] = useState<string>(query);
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -23,7 +23,7 @@ const FilteredAnything = ({ type, query }: { type: ListType["type"]; query: stri
 
   const { sendToInterpreter } = useInterpreter();
 
-  const handleAddTask = async (plan: Plan) => {
+  const handleAddTask = async (plan: Plan<TaskPlanDetails>) => {
     plan &&
       push(
         <TaskForm
@@ -41,7 +41,7 @@ const FilteredAnything = ({ type, query }: { type: ListType["type"]; query: stri
     if (!plans) return;
 
     if (type === "task") {
-      handleAddTask(plans.find((plan) => plan.id === id) as Plan);
+      handleAddTask(plans.find((plan) => plan.id === id) as Plan<TaskPlanDetails>);
     }
   };
 
@@ -49,7 +49,7 @@ const FilteredAnything = ({ type, query }: { type: ListType["type"]; query: stri
     setLoading(true);
     const responses = await sendToInterpreter(type, search);
     if (!responses) return;
-    const { interpretedPlans } = responses;
+    const { interpretedPlans } = responses as unknown as { interpretedPlans: Plan<TaskPlanDetails>[] };
     setPlans(interpretedPlans);
     const _list = interpretedPlans.map((plan) => ({ title: plan.planDetails.title, id: plan.id }));
     setList(_list);
