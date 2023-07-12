@@ -179,7 +179,7 @@ export default (props: Props) => {
           setDurationMax(formatDuration(e.target.value));
         }}
       />
-      <Form.Dropdown id="timePolicy" title="Time Policy">
+      <Form.Dropdown id="timePolicy" title="Hours">
         {timePolicyOptions?.map((policy) => (
           <Form.Dropdown.Item key={policy.value} title={policy.title} value={policy.value} />
         ))}
