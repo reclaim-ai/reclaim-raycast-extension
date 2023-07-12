@@ -1,6 +1,6 @@
 import { Icon, LaunchType, MenuBarExtra, getPreferenceValues, launchCommand, open } from "@raycast/api";
 import { useFetch } from "@raycast/utils";
-import { addDays, differenceInHours, endOfDay, format, isWithinInterval, startOfDay } from "date-fns";
+import { addDays, differenceInHours, endOfDay, format, formatDistance, isWithinInterval, startOfDay } from "date-fns";
 import { useMemo } from "react";
 import { useEvent } from "./hooks/useEvent";
 import { ApiResponseEvents, ApiResponseMoment } from "./hooks/useEvent.types";
@@ -8,6 +8,7 @@ import { Event } from "./types/event";
 import { NativePreferences } from "./types/preferences";
 import { eventColors, truncateEventSize } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
+import { miniDuration } from "./utils/dates";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
@@ -127,6 +128,7 @@ export default function Command() {
   };
 
   const title = useMemo(() => {
+    const now = new Date();
     const eventNow = eventMoment?.event;
 
     if (eventNow) {
@@ -134,8 +136,17 @@ export default function Command() {
       const eventStart = new Date(eventNow.eventStart);
       const eventEnd = new Date(eventNow.eventEnd);
 
-      const nowOrNext = isWithinInterval(new Date(), { start: eventStart, end: eventEnd });
-      return `${nowOrNext ? "Now" : "Next"}: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)}`;
+      const isNow = isWithinInterval(new Date(), { start: eventStart, end: eventEnd });
+
+      const eventString = truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji);
+
+      const distanceString = miniDuration(
+        formatDistance(new Date(eventStart), now, {
+          addSuffix: true,
+        })
+      );
+
+      return isNow ? `Now: ${eventString}` : `Next: ${eventString} ${distanceString}`;
     }
 
     return "No upcoming events";
