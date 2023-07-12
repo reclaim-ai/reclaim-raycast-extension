@@ -1,6 +1,6 @@
 import { Icon, LaunchType, MenuBarExtra, getPreferenceValues, launchCommand, open } from "@raycast/api";
 import { useFetch } from "@raycast/utils";
-import { addDays, differenceInHours, endOfDay, format, isWithinInterval, startOfDay } from "date-fns";
+import { addDays, differenceInHours, endOfDay, format, formatDistance, isWithinInterval, startOfDay } from "date-fns";
 import { useMemo } from "react";
 import { useEvent } from "./hooks/useEvent";
 import { ApiResponseEvents, ApiResponseMoment } from "./hooks/useEvent.types";
@@ -8,8 +8,16 @@ import { Event } from "./types/event";
 import { NativePreferences } from "./types/preferences";
 import { eventColors, truncateEventSize } from "./utils/events";
 import { parseEmojiField } from "./utils/string";
+import { miniDuration } from "./utils/dates";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
+
+type TitleInfo = {
+  minTitle: string;
+  fullTitle: string;
+  event: Event | null;
+  nowOrNext: "NOW" | "NEXT" | "NONE";
+};
 
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
@@ -126,23 +134,56 @@ export default function Command() {
     await launchCommand({ name: "my-calendar", type: LaunchType.UserInitiated });
   };
 
-  const title = useMemo(() => {
-    const eventNow = eventMoment?.event;
+  const titleInfo = useMemo<TitleInfo>(() => {
+    const now = new Date();
+    const eventNextNow = eventMoment?.event;
 
-    if (eventNow) {
-      const realEventTitle = eventNow.sourceDetails?.title || eventNow.title;
-      const eventStart = new Date(eventNow.eventStart);
-      const eventEnd = new Date(eventNow.eventEnd);
+    if (eventNextNow) {
+      const realEventTitle = eventNextNow.sourceDetails?.title || eventNextNow.title;
+      const eventStart = new Date(eventNextNow.eventStart);
+      const eventEnd = new Date(eventNextNow.eventEnd);
 
-      const nowOrNext = isWithinInterval(new Date(), { start: eventStart, end: eventEnd });
-      return `${nowOrNext ? "Now" : "Next"}: ${truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji)}`;
+      const isNow = isWithinInterval(new Date(), { start: eventStart, end: eventEnd });
+
+      const miniEventString = truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji);
+      const eventString = parseEmojiField(realEventTitle).textWithoutEmoji;
+
+      const distanceString = miniDuration(
+        formatDistance(new Date(eventStart), now, {
+          addSuffix: true,
+        })
+      );
+
+      return isNow
+        ? {
+            event: eventNextNow,
+            fullTitle: `Now: ${eventString}`,
+            minTitle: `Now: ${miniEventString}`,
+            nowOrNext: "NOW",
+          }
+        : {
+            event: eventNextNow,
+            fullTitle: `Next: ${eventString} ${distanceString}`,
+            minTitle: `Next: ${miniEventString} ${distanceString}`,
+            nowOrNext: "NEXT",
+          };
     }
 
-    return "No upcoming events";
+    return {
+      fullTitle: "No upcoming events",
+      minTitle: "No upcoming events",
+      nowOrNext: "NONE",
+      event: null,
+    };
   }, [eventMoment]);
 
   return (
-    <MenuBarExtra isLoading={isLoadingEvents || isLoadingMoment} icon={"command-icon.png"} title={title} tooltip="test">
+    <MenuBarExtra
+      isLoading={isLoadingEvents || isLoadingMoment}
+      icon={"command-icon.png"}
+      title={titleInfo.minTitle}
+      tooltip={titleInfo.fullTitle}
+    >
       {events.map((eventSection) => (
         <EventsSection
           key={eventSection.section}
