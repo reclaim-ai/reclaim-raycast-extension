@@ -8,8 +8,9 @@ const useTask = () => {
   const createTask = async (task: CreateTaskProps) => {
     try {
       const data = {
+        eventCategory: 'WORK',
+        timeSchemeId: task.timePolicy,
         title: task.title,
-        eventCategory: "WORK",
         timeChunksRequired: task.timeNeeded,
         snoozeUntil: task.snoozeUntil,
         due: task.due,

@@ -1,9 +1,11 @@
 import { Action, ActionPanel, Form, Toast, popToRoot, showToast } from "@raycast/api";
-import { useMemo, useState } from "react";
-import { useTask } from "./hooks/useTask";
-import { TIME_BLOCK_IN_MINUTES, formatDuration, parseDurationToMinutes } from "./utils/dates";
-import { useUser } from "./hooks/useUser";
 import { addDays, addMinutes } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import { useTask } from "./hooks/useTask";
+import { useTimePolicy } from "./hooks/useTimePolicy";
+import { useUser } from "./hooks/useUser";
+import { TimePolicy } from "./types/time-policy";
+import { TIME_BLOCK_IN_MINUTES, formatDuration, parseDurationToMinutes } from "./utils/dates";
 
 interface FormValues {
   title: string;
@@ -11,6 +13,7 @@ interface FormValues {
   durationMin: string;
   durationMax: string;
   snoozeUntil: Date;
+  timePolicy: string;
   due: Date;
   notes: string;
 }
@@ -31,6 +34,7 @@ export default (props: Props) => {
 
   const { currentUser } = useUser();
   const { createTask } = useTask();
+  const { isLoading: isLoadingTimePolicy, getTimePolicy } = useTimePolicy();
 
   const defaults = useMemo(
     () => ({
@@ -58,24 +62,29 @@ export default (props: Props) => {
   const [timeNeededError, setTimeNeededError] = useState<string | undefined>();
   const [durationMinError, setDurationMinError] = useState<string | undefined>();
   const [durationMaxError, setDurationMaxError] = useState<string | undefined>();
+  const [timePolicies, setTimePolicies] = useState<TimePolicy[] | undefined>();
 
   const [due, setDue] = useState<Date | null>(interpreter ? interpreter.due : defaults.defaultDueDate);
   const [snooze, setSnooze] = useState<Date | null>(interpreter ? interpreter.snoozeUntil : defaults.defaultSnoozeDate);
 
   const handleSubmit = async (formValues: FormValues) => {
     await showToast(Toast.Style.Animated, "Creating task...");
-    const { timeNeeded, durationMin, durationMax, snoozeUntil, due, notes, title } = formValues;
+    const { timeNeeded, durationMin, durationMax, snoozeUntil, due, notes, title, timePolicy } = formValues;
 
     const _timeNeeded = parseDurationToMinutes(timeNeeded) / TIME_BLOCK_IN_MINUTES;
     const _durationMin = parseDurationToMinutes(durationMin) / TIME_BLOCK_IN_MINUTES;
     const _durationMax = parseDurationToMinutes(durationMax) / TIME_BLOCK_IN_MINUTES;
 
+    const selectedTimePolicy = timePolicies?.find((policy) => policy.id === timePolicy);
+
     const created = await createTask({
+      category: "TODO",
       title,
       timeNeeded: _timeNeeded,
       durationMin: _durationMin,
       durationMax: _durationMax,
       snoozeUntil,
+      timePolicy,
       due,
       notes,
     });
@@ -88,9 +97,29 @@ export default (props: Props) => {
     }
   };
 
+  const loadTimePolicy = async () => {
+    const allPolicies = await getTimePolicy("TASK_ASSIGNMENT");
+    if (allPolicies) {
+      setTimePolicies(allPolicies);
+    }
+  };
+
+  const timePolicyOptions = useMemo(() => {
+    return timePolicies
+      ? timePolicies.map((policy) => ({
+          title: policy.title,
+          value: policy.id,
+        }))
+      : [];
+  }, [timePolicies]);
+
+  useEffect(() => {
+    void loadTimePolicy();
+  }, []);
+
   return (
     <Form
-      isLoading={props.loading}
+      isLoading={props.loading || isLoadingTimePolicy}
       actions={
         <ActionPanel>
           <Action.SubmitForm onSubmit={handleSubmit} />
@@ -150,6 +179,11 @@ export default (props: Props) => {
           setDurationMax(formatDuration(e.target.value));
         }}
       />
+      <Form.Dropdown id="timePolicy" title="Time Policy">
+        {timePolicyOptions?.map((policy) => (
+          <Form.Dropdown.Item key={policy.value} title={policy.title} value={policy.value} />
+        ))}
+      </Form.Dropdown>
       <Form.DatePicker
         value={snooze}
         onChange={setSnooze}
