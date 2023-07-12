@@ -19,12 +19,12 @@ export default function Command() {
     try {
       setLoading(true);
       if (text !== "") {
-        const response = (await sendToInterpreter("scheduling-link", text)) as Plan<SchedulingLinkPlanDetails>[];
+        const response = await sendToInterpreter("scheduling-link", text);
         console.log("### =>", response);
 
         if (response) {
           setList(
-            response.map((plan) => ({
+            (response.interpretedPlans as Plan<SchedulingLinkPlanDetails>[]).map((plan) => ({
               uuid: plan.id,
               title: plan.planDetails.title,
               interpreterData: plan.planDetails,
