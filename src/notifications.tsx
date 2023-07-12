@@ -12,6 +12,13 @@ import { miniDuration } from "./utils/dates";
 
 type EventSection = { section: string; sectionTitle: string; events: Event[] };
 
+type TitleInfo = {
+  minTitle: string;
+  fullTitle: string;
+  event: Event | null;
+  nowOrNext: "NOW" | "NEXT" | "NONE";
+};
+
 const ActionOptionsWithContext = ({ event }: { event: Event }) => {
   const { getEventActions } = useEvent();
 
@@ -127,18 +134,19 @@ export default function Command() {
     await launchCommand({ name: "my-calendar", type: LaunchType.UserInitiated });
   };
 
-  const title = useMemo(() => {
+  const titleInfo = useMemo<TitleInfo>(() => {
     const now = new Date();
-    const eventNow = eventMoment?.event;
+    const eventNextNow = eventMoment?.event;
 
-    if (eventNow) {
-      const realEventTitle = eventNow.sourceDetails?.title || eventNow.title;
-      const eventStart = new Date(eventNow.eventStart);
-      const eventEnd = new Date(eventNow.eventEnd);
+    if (eventNextNow) {
+      const realEventTitle = eventNextNow.sourceDetails?.title || eventNextNow.title;
+      const eventStart = new Date(eventNextNow.eventStart);
+      const eventEnd = new Date(eventNextNow.eventEnd);
 
       const isNow = isWithinInterval(new Date(), { start: eventStart, end: eventEnd });
 
-      const eventString = truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji);
+      const miniEventString = truncateEventSize(parseEmojiField(realEventTitle).textWithoutEmoji);
+      const eventString = parseEmojiField(realEventTitle).textWithoutEmoji;
 
       const distanceString = miniDuration(
         formatDistance(new Date(eventStart), now, {
@@ -146,14 +154,36 @@ export default function Command() {
         })
       );
 
-      return isNow ? `Now: ${eventString}` : `Next: ${eventString} ${distanceString}`;
+      return isNow
+        ? {
+            event: eventNextNow,
+            fullTitle: `Now: ${eventString}`,
+            minTitle: `Now: ${miniEventString}`,
+            nowOrNext: "NOW",
+          }
+        : {
+            event: eventNextNow,
+            fullTitle: `Next: ${eventString} ${distanceString}`,
+            minTitle: `Next: ${miniEventString} ${distanceString}`,
+            nowOrNext: "NEXT",
+          };
     }
 
-    return "No upcoming events";
+    return {
+      fullTitle: "No upcoming events",
+      minTitle: "No upcoming events",
+      nowOrNext: "NONE",
+      event: null,
+    };
   }, [eventMoment]);
 
   return (
-    <MenuBarExtra isLoading={isLoadingEvents || isLoadingMoment} icon={"command-icon.png"} title={title} tooltip="test">
+    <MenuBarExtra
+      isLoading={isLoadingEvents || isLoadingMoment}
+      icon={"command-icon.png"}
+      title={titleInfo.minTitle}
+      tooltip={titleInfo.fullTitle}
+    >
       {events.map((eventSection) => (
         <EventsSection
           key={eventSection.section}
