@@ -1,8 +1,4 @@
 import { Action, ActionPanel, Clipboard, Form, Toast, popToRoot, showHUD, showToast } from "@raycast/api";
-import { useMemo, useState } from "react";
-import { useTask } from "./hooks/useTask";
-import { TIME_BLOCK_IN_MINUTES, formatDuration, parseDurationToMinutes } from "./utils/dates";
-import { useUser } from "./hooks/useUser";
 import { addDays, addMinutes } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useTask } from "./hooks/useTask";
@@ -81,14 +77,19 @@ export default (props: Props) => {
 
     const selectedTimePolicy = timePolicies?.find((policy) => policy.id === timePolicy);
 
+    if (!selectedTimePolicy) {
+      await showToast(Toast.Style.Failure, "Something went wrong", `Task ${title} not created`);
+      return;
+    }
+
     const created = await createTask({
-      category: "TODO",
+      category: selectedTimePolicy.taskCategory === "WORK" ? "WORK" : "PERSONAL",
       title,
       timeNeeded: _timeNeeded,
       durationMin: _durationMin,
       durationMax: _durationMax,
       snoozeUntil,
-      timePolicy,
+      timePolicy: selectedTimePolicy.id,
       due,
       notes,
     });

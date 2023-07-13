@@ -15,10 +15,6 @@ const useTimePolicy = () => {
       if (!allPolicies && error) throw error;
 
       const filteredPolicies = allPolicies?.filter((policy) => !!policy.features.find((f) => f === feature));
-      console.log(
-        "### =>",
-        filteredPolicies?.map((n) => n.title)
-      );
 
       return filteredPolicies;
     } catch (error) {

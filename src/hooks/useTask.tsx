@@ -9,7 +9,7 @@ const useTask = () => {
   const createTask = async (task: CreateTaskProps) => {
     try {
       const data = {
-        eventCategory: 'WORK',
+        eventCategory: "WORK",
         timeSchemeId: task.timePolicy,
         title: task.title,
         timeChunksRequired: task.timeNeeded,
@@ -20,7 +20,6 @@ const useTask = () => {
         notes: task.notes,
         alwaysPrivate: true,
       };
-      console.log("### => [POST] /tasks", data);
 
       const [createdTask, error] = await axiosPromiseData<Task>(
         fetcher("/tasks", {
@@ -30,7 +29,6 @@ const useTask = () => {
       );
       if (!createTask && error) throw error;
 
-      console.log("### => [POST] /tasks", createdTask);
       return createdTask;
     } catch (error) {
       console.error("Error while creating task", error);
