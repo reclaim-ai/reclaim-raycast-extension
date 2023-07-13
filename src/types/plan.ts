@@ -2,10 +2,10 @@ export type TaskPlanDetails = {
   id: string;
   userId: string;
   title: string;
-  due: string;
+  due?: string;
   durationTimeChunks: number;
   personal: boolean;
-  snoozeUntil: string;
+  snoozeUntil?: string;
 };
 
 export type SchedulingLinkPlanDetails = {
