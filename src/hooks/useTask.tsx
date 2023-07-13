@@ -1,3 +1,4 @@
+import { Task } from "../types/task";
 import { axiosPromiseData } from "../utils/axiosPromise";
 import reclaimApi from "./useApi";
 import { ApiResponseTasks, CreateTaskProps } from "./useTask.types";
@@ -21,7 +22,7 @@ const useTask = () => {
       };
       console.log("### => [POST] /tasks", data);
 
-      const [createdTask, error] = await axiosPromiseData(
+      const [createdTask, error] = await axiosPromiseData<Task>(
         fetcher("/tasks", {
           method: "POST",
           data,
