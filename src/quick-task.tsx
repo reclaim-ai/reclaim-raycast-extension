@@ -21,7 +21,7 @@ export default function Command() {
     try {
       setLoading(true);
       if (text !== "") {
-        const response = (await sendToInterpreter("task", text)) as any;
+        const response = await sendToInterpreter<TaskPlanDetails>("task", text);
         if (response) {
           setList(
             response.map((item) => ({

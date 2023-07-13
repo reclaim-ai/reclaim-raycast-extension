@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Form, Toast, popToRoot, showToast } from "@raycast/api";
+import { Action, ActionPanel, Clipboard, Form, Toast, popToRoot, showHUD, showToast } from "@raycast/api";
 import { useMemo, useState } from "react";
 import { useTask } from "./hooks/useTask";
 import { TIME_BLOCK_IN_MINUTES, formatDuration, parseDurationToMinutes } from "./utils/dates";
@@ -82,6 +82,8 @@ export default (props: Props) => {
 
     if (created) {
       await showToast(Toast.Style.Success, "Task created", `Task ${title} created successfully`);
+      await Clipboard.copy(`https://app.reclaim.ai/tasks/${created.id}`);
+      await showHUD("Task URL copied to clipboard");
       await popToRoot();
     } else {
       await showToast(Toast.Style.Failure, "Something went wrong", `Task ${title} not created`);
