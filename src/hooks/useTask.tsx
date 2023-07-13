@@ -1,3 +1,4 @@
+import { Task } from "../types/task";
 import { axiosPromiseData } from "../utils/axiosPromise";
 import reclaimApi from "./useApi";
 import { ApiResponseTasks, CreateTaskProps } from "./useTask.types";
@@ -8,8 +9,9 @@ const useTask = () => {
   const createTask = async (task: CreateTaskProps) => {
     try {
       const data = {
-        title: task.title,
         eventCategory: "WORK",
+        timeSchemeId: task.timePolicy,
+        title: task.title,
         timeChunksRequired: task.timeNeeded,
         snoozeUntil: task.snoozeUntil,
         due: task.due,
@@ -18,9 +20,8 @@ const useTask = () => {
         notes: task.notes,
         alwaysPrivate: true,
       };
-      console.log("### => [POST] /tasks", data);
 
-      const [createdTask, error] = await axiosPromiseData(
+      const [createdTask, error] = await axiosPromiseData<Task>(
         fetcher("/tasks", {
           method: "POST",
           data,
@@ -28,7 +29,6 @@ const useTask = () => {
       );
       if (!createTask && error) throw error;
 
-      console.log("### => [POST] /tasks", createdTask);
       return createdTask;
     } catch (error) {
       console.error("Error while creating task", error);

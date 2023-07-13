@@ -4,6 +4,7 @@ import { useDebounce } from "./hooks/useDebounce";
 import useInterpreter from "./hooks/useInterpreter";
 import TaskForm from "./task-form";
 import { TaskPlanDetails } from "./types/plan";
+import { addMinutes } from "date-fns";
 
 export type ListType = {
   uuid: string;
@@ -21,7 +22,8 @@ export default function Command() {
     try {
       setLoading(true);
       if (text !== "") {
-        const response = (await sendToInterpreter("task", text)) as any;
+        const response = await sendToInterpreter<TaskPlanDetails>("task", text);
+
         if (response) {
           setList(
             response.map((item) => ({
@@ -59,9 +61,8 @@ export default function Command() {
           description={
             loading
               ? `Creating Task...`
-              : `"work task Prepare board slides (4h, due: in a week, notbefore: tomorrow)"
-                 "personal task Do the dishes (15min, due:today, notbefore: 12pm)"
-                 "work task Meeting prep (10min, due:11am tomorrow)"`
+              : `"work task Prep board slides (4h, due: 10am Monday, notbefore: tomorrow)"
+                 "personal task Do the dishes (15min, due: today, notbefore: 12pm)"`
           }
           title="Quickly create a Task"
         />
@@ -79,9 +80,13 @@ export default function Command() {
                     push(
                       <TaskForm
                         interpreter={{
-                          due: new Date(item.interpreterData.due),
+                          due: item.interpreterData.due
+                            ? new Date(item.interpreterData.due)
+                            : addMinutes(new Date(), 5),
                           durationTimeChunk: item.interpreterData.durationTimeChunks,
-                          snoozeUntil: new Date(item.interpreterData.snoozeUntil),
+                          snoozeUntil: item.interpreterData.snoozeUntil
+                            ? new Date(item.interpreterData.snoozeUntil)
+                            : new Date(),
                         }}
                         title={item.title}
                       />
