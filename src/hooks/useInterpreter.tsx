@@ -24,7 +24,8 @@ const useInterpreter = () => {
       );
       if (!response || error) throw error;
 
-      return response.interpretedPlans;
+      console.log("### => [RESPONSE] interpreter", response.interpretedPlans);
+      return response;
     } catch (error) {
       console.error("Error while sending message to interpreter", error);
     }
